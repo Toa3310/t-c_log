@@ -1,17 +1,19 @@
-def task_in_progress(task):
-    task_end = False
-    check = input("作業が完了した場合はcを、とちゅう")
+def display_task(tasks):
+    print("-タスク一覧-")
+    for i, task in enumerate(tasks, start=1):
+        print(f"{i}: {task}")
 
-task = ""
-option = input("---今日やることを1つ選択してください---\n1. 過去問を20問解く\n2. 昨日の復習\n3. テキスト/参考書1セクション\n4. 重要単語をまとめる\n")
+tasks = ""
+condition = int(input("今日のコンディションを入力してください(0:良くない,1:普通,2:良い): "))
 
-if option == "1":
-    task = "過去問20問"
-elif option == "2":
-    task = "昨日の復習"
-elif option == "3":
-    task = "テキスト/参考書1セクション"
-elif option == "4":
-    task = "重要単語まとめ"
+if condition == 0:
+    tasks = ["過去問10問", "参考書1セクション", "昨日の復習10分", "重要単語メモ10分"]
+elif condition == 1:
+    tasks = ["過去問20問", "参考書2セクション", "復習20分", "重要単語メモ15分"]
+elif condition == 2:
+    tasks = ["過去問30問", "参考書4セクション", "復習30分", "重要単語メモ20分"]
 else:
-    print("入力は1~4でお願いします")
+    print("0,1,2のどれかを入力してください")
+
+display_task(tasks)
+
