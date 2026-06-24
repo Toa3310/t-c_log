@@ -4,6 +4,20 @@
     <title>テスト</title>
 </head>
 <body>
-    本文
+    <h1>今日のコンディションを選んでください</h1>
+    <form action="/tasks" method="POST">
+        <button type="submit" name="condition" value="0">良くない</button>
+        <button type="submit" name="condition" value="1">普通</button>
+        <button type="submit" name="condition" value="2">良い</button>
+    </form>
+
+    <h2>今日のタスク</h2>
+    <form action="/start" method="POST">
+        {% for task in tasks %}
+            <input type="checkbox" name="selected_tasks" value="{{tasks.name}}">
+            <label>{{task.name}}</label><br>
+        {% endfor %}
+        <button type="submit">このタスクで始める</button>
+    </form>
 </body>
 </html>

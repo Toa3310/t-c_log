@@ -56,9 +56,7 @@ print("\n-タスク一覧-")
 display_task(tasks)
 
 
-selected_nums = list(
-    map(int, input("\n今日行うタスクを選択してください(例:1 2): ").split())
-)
+selected_nums = list(map(int, input("\n今日行うタスクを選択してください(例:1 2): ").split()))
 
 selected_tasks = []
 
