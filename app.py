@@ -1,6 +1,7 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, session
 
 app = Flask(__name__)
+app.secret_key = "Acheron"
 
 @app.route('/')
 def index():
@@ -31,6 +32,18 @@ def tasks():
             {"name": "重要単語メモ20分", "done": False}
         ]
     return render_template("index.html",tasks = task_list)
+
+@app.route('/start', methods=["POST"])
+def start():
+    selected_names = request.form.getlist("selected_tasks")
+    
+    selected_tasks = []
+    for name in selected_names:
+        selected_tasks.append({"name": name, "done": False})
+    
+    session["selected_tasks"] = selected_tasks
+
+    return render_template("index.html", tasks=selected_tasks)
 
 if __name__ == "__main__":
     app.run(debug=True)

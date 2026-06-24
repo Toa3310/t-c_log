@@ -14,7 +14,7 @@
     <h2>今日のタスク</h2>
     <form action="/start" method="POST">
         {% for task in tasks %}
-            <input type="checkbox" name="selected_tasks" value="{{tasks.name}}">
+            <input type="checkbox" name="selected_tasks" value="{{task.name}}">
             <label>{{task.name}}</label><br>
         {% endfor %}
         <button type="submit">このタスクで始める</button>
