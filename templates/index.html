@@ -12,7 +12,11 @@
     </form>
 
     <h2>今日のタスク</h2>
+    {% if message %}
+        <p style="color: red;">{{ message }}</p>
+    {% endif %}
     <form action="/start" method="POST">
+        <input type="hidden" name="condition" value="{{ condition }}">
         {% for task in tasks %}
             <input type="checkbox" name="selected_tasks" value="{{task.name}}">
             <label>{{task.name}}</label><br>

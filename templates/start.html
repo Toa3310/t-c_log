@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>今日のタスク</title>
+</head>
+<body>
+    <h1>今日のタスク</h1>
+    <p>進捗: {{ rate }}%</p>
+    {% for task in tasks %}
+        <p>
+            {{ task.name }}
+            {% if task.done %}
+                ✅
+            {% else %}
+                <form action="/complete" method="POST">
+                    <input type="hidden" name="task_name" value="{{ task.name }}">
+                    <button type="submit">完了</button>
+                </form>
+            {% endif %}
+        </p>
+    {% endfor %}
+</body>
+</html>
