@@ -1,7 +1,45 @@
+import sqlite3
+from datetime import date, datetime
+
 from flask import Flask, render_template, request, session
 
 app = Flask(__name__)
 app.secret_key = "Acheron"
+
+DB_PATH = "taskcondition.db"
+
+def get_db():
+    return sqlite3.connect(DB_PATH)
+
+def init_db():
+    conn = get_db()
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS task_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT NOT NULL,
+            condition INTEGER NOT NULL,
+            task_name TEXT NOT NULL,
+            done INTEGER NOT NULL,
+            created_at TEXT NOT NULL
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+init_db()
+
+def save_logs(selected_tasks, condition):
+    today = date.today().isoformat()
+    now = datetime.now().isoformat()
+
+    conn = get_db()
+    for task in selected_tasks:
+        conn.execute(
+            "INSERT INTO task_logs (date, condition, task_name, done, created_at) VALUES (?, ?, ?, ?, ?)",
+            (today, condition, task["name"], int(task["done"]), now)
+        )
+    conn.commit()
+    conn.close()
 
 def completion_rate(tasks):
     if not tasks:
@@ -46,9 +84,9 @@ def tasks():
 @app.route('/start', methods=["POST"])
 def start():
     selected_names = request.form.getlist("selected_tasks")
+    condition = int(request.form["condition"])
 
     if not selected_names:
-        condition = int(request.form["condition"])
         task_list = make_tasks(condition)
         return render_template("index.html", tasks=task_list, condition=condition, message="タスクを1つ以上選択してください")
 
@@ -57,6 +95,7 @@ def start():
         selected_tasks.append({"name": name, "done": False})
 
     session["selected_tasks"] = selected_tasks
+    session["condition"] = condition
 
     return render_template("start.html", tasks=selected_tasks, rate=completion_rate(selected_tasks))
 
@@ -73,6 +112,7 @@ def complete():
 
     all_done = all(task["done"] for task in selected_tasks)
     if all_done:
+        save_logs(selected_tasks, session.get("condition"))
         return render_template("complete.html", tasks=selected_tasks, rate=rate)
 
     return render_template("start.html", tasks=selected_tasks, rate=rate)
