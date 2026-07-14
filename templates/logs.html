@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>これまでの記録</title>
+</head>
+<body>
+    <h1>これまでの記録</h1>
+    <table border="1">
+        <tr>
+            <th>記録日時</th>
+            <th>コンディション</th>
+            <th>タスク</th>
+        </tr>
+        {% for s in sessions %}
+        <tr>
+            <td>{{ s.created_at[:10] }} {{ s.created_at[11:16] }}</td>
+            <td>{{ s.condition }}</td>
+            <td>
+                {% for task in s.tasks %}
+                    {{ task.task_name }}{% if task.done %}✅{% else %}(未完了){% endif %}<br>
+                {% endfor %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    <p><a href="/">トップに戻る</a></p>
+</body>
+</html>

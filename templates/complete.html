@@ -5,12 +5,13 @@
 </head>
 <body>
     <h1>今日のタスクは全て完了しました！</h1>
-    <p>今日は以下のタスクをしました↓</p>
+    <p>以下のタスクをしました↓</p>
     <ul>
         {% for task in tasks %}
             <li>{{ task.name }} ✅</li>
         {% endfor %}
     </ul>
     <p>進捗: {{ rate }}%</p>
+    <p><a href="/">トップに戻る</a></p>
 </body>
 </html>

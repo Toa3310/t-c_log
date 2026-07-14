@@ -9,7 +9,9 @@ app.secret_key = "Acheron"
 DB_PATH = "taskcondition.db"
 
 def get_db():
-    return sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 def init_db():
     conn = get_db()
@@ -46,6 +48,8 @@ def completion_rate(tasks):
         return 0
     done_count = sum(1 for task in tasks if task["done"])
     return done_count / len(tasks) * 100
+
+CONDITION_LABELS = {0: "よくない", 1: "普通", 2: "良い"}
 
 def make_tasks(condition):
     if condition == 0:
@@ -116,6 +120,33 @@ def complete():
         return render_template("complete.html", tasks=selected_tasks, rate=rate)
 
     return render_template("start.html", tasks=selected_tasks, rate=rate)
+
+@app.route('/cancel', methods=["POST"])
+def cancel():
+    selected_tasks = session.get("selected_tasks", [])
+    condition = session.get("condition")
+    rate = completion_rate(selected_tasks)
+    if selected_tasks:
+        save_logs(selected_tasks, condition)
+    session.pop("selected_tasks", None)
+    session.pop("condition", None)
+    return render_template("cancel.html", tasks=selected_tasks, rate=rate)
+
+@app.route('/logs')
+def logs():
+    conn = get_db()
+    rows = conn.execute("SELECT * FROM task_logs ORDER BY id DESC").fetchall()
+    conn.close()
+
+    sessions = []
+    for row in rows:
+        key = (row["condition"], row["created_at"])
+        if sessions and sessions[-1]["key"] == key:
+            sessions[-1]["tasks"].append(row)
+        else:
+            sessions.append({"key": key, "condition": CONDITION_LABELS[row["condition"]], "created_at": row["created_at"], "tasks": [row]})
+
+    return render_template("logs.html", sessions=sessions)
 
 if __name__ == "__main__":
     app.run(debug=True)
