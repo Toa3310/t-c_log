@@ -165,5 +165,16 @@ def logs():
 
     return render_template("logs.html", sessions=sessions)
 
+@app.route('/delete', methods=["POST"])
+def delete():
+    created_at = request.form["created_at"]
+
+    conn = get_db()
+    conn.execute("DELETE FROM task_logs WHERE created_at = ?", (created_at,))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("logs"))
+
 if __name__ == "__main__":
     app.run(debug=True)
