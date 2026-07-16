@@ -11,6 +11,7 @@
             <th>コンディション</th>
             <th>タスク</th>
             <th>一言メモ</th>
+            <th></th>
         </tr>
         {% for s in sessions %}
         <tr>
@@ -22,6 +23,12 @@
                 {% endfor %}
             </td>
             <td>{% if s.memo %}{{ s.memo }}{% endif %}</td>
+            <td>
+                <form action="/delete" method="POST">
+                    <input type="hidden" name="created_at" value="{{ s.created_at }}">
+                    <button type="submit">削除</button>
+                </form>
+            </td>
         </tr>
         {% endfor %}
     </table>
