@@ -1,12 +1,15 @@
 import sqlite3
+import os
 from datetime import date, datetime
 
+from dotenv import load_dotenv
 from flask import Flask, render_template, request, session
 
+load_dotenv()
 app = Flask(__name__)
-app.secret_key = "Acheron"
 
-DB_PATH = "taskcondition.db"
+app.secret_key = os.environ["SECRET_KEY"]
+DB_PATH = os.environ["DB_PATH"]
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)
