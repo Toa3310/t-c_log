@@ -12,6 +12,11 @@
         {% endfor %}
     </ul>
     <p>進捗: {{ rate }}%</p>
-    <p><a href="/">トップに戻る</a></p>
+
+    <form action="/save" method="POST">
+        <label for="memo">今日の振り返り（一言メモ）</label><br>
+        <textarea id="memo" name="memo" rows="3" cols="40"></textarea><br>
+        <button type="submit">記録する</button>
+    </form>
 </body>
 </html>

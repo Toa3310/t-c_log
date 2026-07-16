@@ -3,7 +3,7 @@ import os
 from datetime import date, datetime
 
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, session
+from flask import Flask, redirect, render_template, request, session, url_for
 
 load_dotenv()
 app = Flask(__name__)
@@ -25,23 +25,29 @@ def init_db():
             condition INTEGER NOT NULL,
             task_name TEXT NOT NULL,
             done INTEGER NOT NULL,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL,
+            memo TEXT
         )
     """)
+
+    columns = [row["name"] for row in conn.execute("PRAGMA table_info(task_logs)")]
+    if "memo" not in columns:
+        conn.execute("ALTER TABLE task_logs ADD COLUMN memo TEXT")
+
     conn.commit()
     conn.close()
 
 init_db()
 
-def save_logs(selected_tasks, condition):
+def save_logs(selected_tasks, condition, memo):
     today = date.today().isoformat()
     now = datetime.now().isoformat()
 
     conn = get_db()
     for task in selected_tasks:
         conn.execute(
-            "INSERT INTO task_logs (date, condition, task_name, done, created_at) VALUES (?, ?, ?, ?, ?)",
-            (today, condition, task["name"], int(task["done"]), now)
+            "INSERT INTO task_logs (date, condition, task_name, done, created_at, memo) VALUES (?, ?, ?, ?, ?, ?)",
+            (today, condition, task["name"], int(task["done"]), now, memo)
         )
     conn.commit()
     conn.close()
@@ -119,7 +125,6 @@ def complete():
 
     all_done = all(task["done"] for task in selected_tasks)
     if all_done:
-        save_logs(selected_tasks, session.get("condition"))
         return render_template("complete.html", tasks=selected_tasks, rate=rate)
 
     return render_template("start.html", tasks=selected_tasks, rate=rate)
@@ -127,13 +132,22 @@ def complete():
 @app.route('/cancel', methods=["POST"])
 def cancel():
     selected_tasks = session.get("selected_tasks", [])
-    condition = session.get("condition")
     rate = completion_rate(selected_tasks)
+    return render_template("cancel.html", tasks=selected_tasks, rate=rate)
+
+@app.route('/save', methods=["POST"])
+def save():
+    memo = request.form.get("memo", "")
+    selected_tasks = session.get("selected_tasks", [])
+    condition = session.get("condition")
+
     if selected_tasks:
-        save_logs(selected_tasks, condition)
+        save_logs(selected_tasks, condition, memo)
+
     session.pop("selected_tasks", None)
     session.pop("condition", None)
-    return render_template("cancel.html", tasks=selected_tasks, rate=rate)
+
+    return redirect(url_for("logs"))
 
 @app.route('/logs')
 def logs():
@@ -147,7 +161,7 @@ def logs():
         if sessions and sessions[-1]["key"] == key:
             sessions[-1]["tasks"].append(row)
         else:
-            sessions.append({"key": key, "condition": CONDITION_LABELS[row["condition"]], "created_at": row["created_at"], "tasks": [row]})
+            sessions.append({"key": key, "condition": CONDITION_LABELS[row["condition"]], "created_at": row["created_at"], "memo": row["memo"], "tasks": [row]})
 
     return render_template("logs.html", sessions=sessions)
 
