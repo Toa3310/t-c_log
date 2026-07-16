@@ -1,9 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>今日のタスク</title>
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block title %}今日のタスク{% endblock %}
+
+{% block content %}
     <h1>今日のタスク</h1>
     <p>進捗: {{ rate }}%</p>
     {% for task in tasks %}
@@ -23,5 +22,4 @@
     <form action="/cancel" method="POST">
         <button type="submit">終了</button>
     </form>
-</body>
-</html>
+{% endblock %}

@@ -1,9 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>途中終了しました</title>
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block title %}途中終了しました{% endblock %}
+
+{% block content %}
     <h1>今回はここまでにしました</h1>
     <p>今日やったタスク↓</p>
     <ul>
@@ -18,5 +17,4 @@
         <textarea id="memo" name="memo" rows="3" cols="40"></textarea><br>
         <button type="submit">記録する</button>
     </form>
-</body>
-</html>
+{% endblock %}

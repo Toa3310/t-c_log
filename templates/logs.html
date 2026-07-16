@@ -1,10 +1,9 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>これまでの記録</title>
-</head>
-<body>
-    <h1>これまでの記録</h1>
+{% extends "base.html" %}
+
+{% block title %}これまでの記録一覧{% endblock %}
+
+{% block content %}
+    <h1>記録一覧</h1>
     <table border="1">
         <tr>
             <th>記録日時</th>
@@ -33,5 +32,4 @@
         {% endfor %}
     </table>
     <p><a href="/">トップに戻る</a></p>
-</body>
-</html>
+{% endblock %}
