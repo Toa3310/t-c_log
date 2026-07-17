@@ -38,6 +38,18 @@ button:hover {
     background-color: #eee;
 }
 
+textarea{
+    min-width: 100px;
+    min-height: 50px;
+    max-width: 300px;
+    max-height: 100px;
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 0.9rem;
+}
+
 .danger{
     color: #c0392b;
     border-color: #e0b4b0;
