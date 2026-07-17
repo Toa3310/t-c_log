@@ -1,9 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>お疲れさまでした</title>
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block title %}お疲れさまでした{% endblock %}
+
+{% block content %}
     <h1>今日のタスクは全て完了しました！</h1>
     <p>以下のタスクをしました↓</p>
     <ul>
@@ -15,8 +14,7 @@
 
     <form action="/save" method="POST">
         <label for="memo">今日の振り返り（一言メモ）</label><br>
-        <textarea id="memo" name="memo" rows="3" cols="40"></textarea><br>
+        <textarea id="memo" name="memo" rows="3" placeholder="例: 順調だった"></textarea><br>
         <button type="submit">記録する</button>
     </form>
-</body>
-</html>
+{% endblock %}

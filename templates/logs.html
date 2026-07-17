@@ -1,11 +1,10 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>これまでの記録</title>
-</head>
-<body>
-    <h1>これまでの記録</h1>
-    <table border="1">
+{% extends "base.html" %}
+
+{% block title %}これまでの記録一覧{% endblock %}
+
+{% block content %}
+    <h1>記録一覧</h1>
+    <table>
         <tr>
             <th>記録日時</th>
             <th>コンディション</th>
@@ -15,7 +14,7 @@
         </tr>
         {% for s in sessions %}
         <tr>
-            <td>{{ s.created_at[:10] }} {{ s.created_at[11:16] }}</td>
+            <td class="nowrap">{{ s.created_at[:10] }} {{ s.created_at[11:16] }}</td>
             <td>{{ s.condition }}</td>
             <td>
                 {% for task in s.tasks %}
@@ -26,12 +25,11 @@
             <td>
                 <form action="/delete" method="POST">
                     <input type="hidden" name="created_at" value="{{ s.created_at }}">
-                    <button type="submit">削除</button>
+                    <button type="submit" class="danger">削除</button>
                 </form>
             </td>
         </tr>
         {% endfor %}
     </table>
     <p><a href="/">トップに戻る</a></p>
-</body>
-</html>
+{% endblock %}
