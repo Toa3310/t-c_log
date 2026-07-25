@@ -45,7 +45,6 @@ def init_db():
             1: ["過去問20問", "参考書2セクション", "復習20分", "単語メモ15分"],
             2: ["過去問30問", "参考書3セクション", "復習30分", "単語メモ20分"],
         }
-
         for condition, names in initial_data.items():
             for name in names:
                 conn.execute("INSERT INTO task_templates (condition, name) VALUES (?, ?)", (condition, name))
@@ -81,28 +80,14 @@ def completion_rate(tasks):
 CONDITION_LABELS = {0: "よくない", 1: "普通", 2: "良い"}
 
 def make_tasks(condition):
-    if condition == 0:
-        return [
-            {"name": "過去問10問", "done": False},
-            {"name": "参考書1セクション", "done": False},
-            {"name": "復習10分", "done": False},
-            {"name": "単語メモ10分", "done": False}
-        ]
-    elif condition == 1:
-        return [
-            {"name": "過去問20問", "done": False},
-            {"name": "参考書2セクション", "done": False},
-            {"name": "復習20分", "done": False},
-            {"name": "単語メモ15分", "done": False}
-        ]
-    elif condition == 2:
-        return [
-            {"name": "過去問30問", "done": False},
-            {"name": "参考書3セクション", "done": False},
-            {"name": "復習30分", "done": False},
-            {"name": "単語メモ20分", "done": False}
-        ]
-    return []
+    conn = get_db()
+    rows = conn.execute("SELECT name FROM task_templates WHERE condition = ?", (condition,)).fetchall()
+    conn.close()
+
+    tasks = []
+    for row in rows:
+        tasks.append({"name": row["name"], "done": False})
+    return tasks
 
 @app.route('/')
 def index():
