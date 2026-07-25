@@ -30,6 +30,26 @@ def init_db():
         )
     """)
 
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS task_templates (
+            id INTEGER  PRIMARY KEY AUTOINCREMENT,
+            condition INTEGER NOT NULL,
+            name TEXT NOT NULL
+        )
+    """)
+
+    count = conn.execute("SELECT COUNT(*) FROM task_templates").fetchone()[0]
+    if count == 0:
+        initial_data = {
+            0: ["過去問10問", "参考書1セクション", "復習10分", "単語メモ10分"],
+            1: ["過去問20問", "参考書2セクション", "復習20分", "単語メモ15分"],
+            2: ["過去問30問", "参考書3セクション", "復習30分", "単語メモ20分"],
+        }
+
+        for condition, names in initial_data.items():
+            for name in names:
+                conn.execute("INSERT INTO task_templates (condition, name) VALUES (?, ?)", (condition, name))
+
     columns = [row["name"] for row in conn.execute("PRAGMA table_info(task_logs)")]
     if "memo" not in columns:
         conn.execute("ALTER TABLE task_logs ADD COLUMN memo TEXT")
@@ -66,21 +86,21 @@ def make_tasks(condition):
             {"name": "過去問10問", "done": False},
             {"name": "参考書1セクション", "done": False},
             {"name": "復習10分", "done": False},
-            {"name": "重要単語メモ10分", "done": False}
+            {"name": "単語メモ10分", "done": False}
         ]
     elif condition == 1:
         return [
             {"name": "過去問20問", "done": False},
             {"name": "参考書2セクション", "done": False},
             {"name": "復習20分", "done": False},
-            {"name": "重要単語メモ15分", "done": False}
+            {"name": "単語メモ15分", "done": False}
         ]
     elif condition == 2:
         return [
             {"name": "過去問30問", "done": False},
-            {"name": "参考書4セクション", "done": False},
+            {"name": "参考書3セクション", "done": False},
             {"name": "復習30分", "done": False},
-            {"name": "重要単語メモ20分", "done": False}
+            {"name": "単語メモ20分", "done": False}
         ]
     return []
 
