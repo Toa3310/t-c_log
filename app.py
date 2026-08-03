@@ -181,5 +181,17 @@ def delete():
 
     return redirect(url_for("logs"))
 
+@app.route('/templates')
+def templates():
+    conn = get_db()
+    rows = conn.execute("SELECT condition,name FROM task_templates").fetchall()
+    conn.close()
+
+    groups=[]
+    for condition in [2, 1, 0]:
+        names = [row["name"] for row in rows if row["condition"] == condition]
+        groups.append({"condition": CONDITION_LABELS[condition], "names": names})
+    return render_template("templates.html", groups=groups)
+
 if __name__ == "__main__":
     app.run(debug=True)
