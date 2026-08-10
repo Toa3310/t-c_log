@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}タスクテンプレート一覧{% endblock %}
+
+{% block content %}
+    <h1>タスクのテンプレート一覧</h1>
+    <p><a href="/">トップに戻る</a></p>
+    {% for g in groups %}
+        <h2>{{ g.condition }}</h2>
+        <ul>
+            {% for task in g.tasks %}
+                <li>
+                    {{ task.name }}
+                    <form action="/templates/delete" method="POST">
+                        <input type="hidden" name="id" value="{{ task.id }}">
+                        <button type="submit" class="danger">削除</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+{% endblock %}

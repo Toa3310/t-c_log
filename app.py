@@ -29,7 +29,6 @@ def init_db():
             memo TEXT
         )
     """)
-
     conn.execute("""
         CREATE TABLE IF NOT EXISTS task_templates (
             id INTEGER  PRIMARY KEY AUTOINCREMENT,
@@ -37,7 +36,6 @@ def init_db():
             name TEXT NOT NULL
         )
     """)
-
     count = conn.execute("SELECT COUNT(*) FROM task_templates").fetchone()[0]
     if count == 0:
         initial_data = {
@@ -48,11 +46,9 @@ def init_db():
         for condition, names in initial_data.items():
             for name in names:
                 conn.execute("INSERT INTO task_templates (condition, name) VALUES (?, ?)", (condition, name))
-
     columns = [row["name"] for row in conn.execute("PRAGMA table_info(task_logs)")]
     if "memo" not in columns:
         conn.execute("ALTER TABLE task_logs ADD COLUMN memo TEXT")
-
     conn.commit()
     conn.close()
 
@@ -61,7 +57,6 @@ init_db()
 def save_logs(selected_tasks, condition, memo):
     today = date.today().isoformat()
     now = datetime.now().isoformat()
-
     conn = get_db()
     for task in selected_tasks:
         conn.execute(
@@ -103,18 +98,14 @@ def tasks():
 def start():
     selected_names = request.form.getlist("selected_tasks")
     condition = int(request.form["condition"])
-
     if not selected_names:
         task_list = make_tasks(condition)
         return render_template("index.html", tasks=task_list, condition=condition, message="タスクを1つ以上選択してください")
-
     selected_tasks = []
     for name in selected_names:
         selected_tasks.append({"name": name, "done": False})
-
     session["selected_tasks"] = selected_tasks
     session["condition"] = condition
-
     return render_template("start.html", tasks=selected_tasks, rate=completion_rate(selected_tasks))
 
 @app.route('/complete', methods=["POST"])
@@ -125,9 +116,7 @@ def complete():
         if task["name"] == task_name:
             task["done"] = True
     session["selected_tasks"] = selected_tasks
-
     rate = completion_rate(selected_tasks)
-
     all_done = all(task["done"] for task in selected_tasks)
     if all_done:
         return render_template("complete.html", tasks=selected_tasks, rate=rate)
@@ -145,13 +134,10 @@ def save():
     memo = request.form.get("memo", "")
     selected_tasks = session.get("selected_tasks", [])
     condition = session.get("condition")
-
     if selected_tasks:
         save_logs(selected_tasks, condition, memo)
-
     session.pop("selected_tasks", None)
     session.pop("condition", None)
-
     return redirect(url_for("logs"))
 
 @app.route('/logs')
@@ -159,7 +145,6 @@ def logs():
     conn = get_db()
     rows = conn.execute("SELECT * FROM task_logs ORDER BY id DESC").fetchall()
     conn.close()
-
     sessions = []
     for row in rows:
         key = (row["condition"], row["created_at"])
@@ -167,31 +152,36 @@ def logs():
             sessions[-1]["tasks"].append(row)
         else:
             sessions.append({"key": key, "condition": CONDITION_LABELS[row["condition"]], "created_at": row["created_at"], "memo": row["memo"], "tasks": [row]})
-
     return render_template("logs.html", sessions=sessions)
 
-@app.route('/delete', methods=["POST"])
-def delete():
+@app.route('/logs/delete', methods=["POST"])
+def delete_log():
     created_at = request.form["created_at"]
-
     conn = get_db()
     conn.execute("DELETE FROM task_logs WHERE created_at = ?", (created_at,))
     conn.commit()
     conn.close()
-
     return redirect(url_for("logs"))
 
 @app.route('/templates')
 def templates():
     conn = get_db()
-    rows = conn.execute("SELECT condition,name FROM task_templates").fetchall()
+    rows = conn.execute("SELECT id, condition, name FROM task_templates").fetchall()
     conn.close()
-
     groups=[]
     for condition in [2, 1, 0]:
-        names = [row["name"] for row in rows if row["condition"] == condition]
-        groups.append({"condition": CONDITION_LABELS[condition], "names": names})
-    return render_template("templates.html", groups=groups)
+        tasks = [row for row in rows if row["condition"] == condition]
+        groups.append({"condition": CONDITION_LABELS[condition], "tasks": tasks})
+    return render_template("task_templates.html", groups=groups)
+
+@app.route('/templates/delete', methods=["POST"])
+def delete_template():
+    template_id = request.form["id"]
+    conn = get_db()
+    conn.execute("DELETE FROM task_templates WHERE id = ?", (template_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("templates"))
 
 if __name__ == "__main__":
     app.run(debug=True)
