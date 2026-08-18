@@ -183,5 +183,15 @@ def delete_template():
     conn.close()
     return redirect(url_for("templates"))
 
+@app.route('/templates/add', methods=["POST"])
+def add_template():
+    condition = request.form["condition"]
+    task_name = request.form["name"]
+    conn = get_db()
+    conn.execute("INSERT INTO task_templates (condition, name) VALUES (?, ?)", (condition, task_name))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("templates"))
+
 if __name__ == "__main__":
     app.run(debug=True)

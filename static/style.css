@@ -50,6 +50,23 @@ textarea{
     font-size: 0.9rem;
 }
 
+fieldset {
+    background-color: #ffffff;
+}
+
+input, select {
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 0.9rem;
+}
+
+fieldset label {
+    display: block;
+    margin-bottom: 12px;
+}
+
 .danger{
     color: #c0392b;
     border-color: #e0b4b0;
