@@ -193,5 +193,15 @@ def add_template():
     conn.close()
     return redirect(url_for("templates"))
 
+@app.route('/templates/edit', methods=["POST"])
+def edit_template():
+    id = request.form["id"]
+    name = request.form["name"]
+    conn = get_db()
+    conn.execute("UPDATE task_templates SET name = ? WHERE id = ?", (name, id))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("templates"))
+
 if __name__ == "__main__":
     app.run(debug=True)

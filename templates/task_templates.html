@@ -32,7 +32,12 @@
         <ul>
             {% for task in g.tasks %}
                 <li>
-                    {{ task.name }}
+                    <form action="/templates/edit" method="POST">
+                        <input type="hidden" name="id" value="{{ task.id }}">
+                        <input type="text" name="name" value="{{ task.name }}">
+                        <button type="submit">更新</button>
+                    </form>
+
                     <form action="/templates/delete" method="POST">
                         <input type="hidden" name="id" value="{{ task.id }}">
                         <button type="submit" class="danger">削除</button>
