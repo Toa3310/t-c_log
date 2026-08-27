@@ -3,8 +3,9 @@
 {% block title %}tascon{% endblock %}
 
 {% block content %}
-    <h1>今日のコンディションを選んでください</h1>
-    <p><a href="/logs">これまでの記録を見る</a></p>
+    <h1>今日の調子を選んでください</h1>
+    <a href="/logs">これまでの記録を見る</a>
+    <a href="/templates">タスクのテンプレート一覧を見る</a></br>
     <form action="/tasks" method="POST">
         <button type="submit" name="condition" value="0">よくない</button>
         <button type="submit" name="condition" value="1">普通</button>

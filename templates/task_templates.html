@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}タスクテンプレート一覧{% endblock %}
+
+{% block content %}
+    <h1>タスクのテンプレート一覧</h1>
+    <p><a href="/">トップに戻る</a></p>
+    <form action="/templates/add" method="POST">
+        <fieldset>
+            <legend>タスクを追加</legend>
+
+            <label>
+                調子
+                <select name="condition">
+                    <option value="2">良い</option>
+                    <option value="1">普通</option>
+                    <option value="0">よくない</option>
+                </select>
+            </label>
+
+            <label>
+                タスク名
+                <input type="text" name="name" placeholder="例: 過去問10問">
+            </label>
+
+            <button type="submit">追加</button>
+        </fieldset>
+    </form>
+
+    {% for g in groups %}
+        <h2>{{ g.condition }}</h2>
+        <ul>
+            {% for task in g.tasks %}
+                <li>
+                    <form action="/templates/edit" method="POST">
+                        <input type="hidden" name="id" value="{{ task.id }}">
+                        <input type="text" name="name" value="{{ task.name }}">
+                        <button type="submit">更新</button>
+                    </form>
+
+                    <form action="/templates/delete" method="POST">
+                        <input type="hidden" name="id" value="{{ task.id }}">
+                        <button type="submit" class="danger">削除</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+{% endblock %}
