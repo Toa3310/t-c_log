@@ -203,5 +203,23 @@ def edit_template():
     conn.close()
     return redirect(url_for("templates"))
 
+@app.route('/stats')
+def stats():
+    condition_rates = []
+    conn = get_db()
+    zentai = conn.execute("SELECT AVG(done) * 100 FROM task_logs").fetchone()
+    row = conn.execute("SELECT condition, AVG(done) * 100 FROM task_logs GROUP BY condition").fetchall()
+    conn.close()
+    ach_rate = zentai[0]
+    if ach_rate is None:
+        ach_rate = 0
+    d = {}
+    for r in row:
+        d[r[0]] = r[1]
+    for c in [2,1,0]:
+        rate = d.get(c, 0)
+        condition_rates.append({"label": CONDITION_LABELS[c],"rate": rate,})
+    return render_template("stats.html", rate=ach_rate,condition_rates=condition_rates)
+
 if __name__ == "__main__":
     app.run(debug=True)

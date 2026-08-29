@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}統計情報{% endblock %}
+{% block content %}
+    <h1>統計</h1>
+    <p>全体の達成率:</p>
+    <div class="bar-graph-wrap">
+        <div class="graph" style="width: {{ rate }}%">
+            <span class="number">{{ rate | round(1) }}%</span>
+        </div>
+    </div>
+    <p>調子ごとの達成率:</p>
+    <div class="bar-graph-wrap">
+        {% for item in condition_rates %}
+            <div class="graph" style="width: {{ item.rate }}%">
+                <span class="name">{{ item.label }}</span>
+                <span class="number">{{ item.rate | round(1) }}%</span>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
