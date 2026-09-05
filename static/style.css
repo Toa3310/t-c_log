@@ -8,6 +8,17 @@ body {
     line-height: 1.7;
 }
 
+nav {
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #ddd;
+}
+
+nav a {
+    margin-right: 10px;
+    text-decoration: none;
+}
+
 h1 {
     font-size: 1.4rem;
     border-bottom: 2px solid #ddd;
