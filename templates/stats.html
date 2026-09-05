@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}統計情報{% endblock %}
+{% block content %}
+    <h1>統計</h1>
+    <p>全体の達成率:</p>
+    <div class="bar-graph-wrap">
+        <div class="graph" style="width: {{ rate }}%">
+            <span class="number">{{ rate | round(1) }}%</span>
+        </div>
+    </div>
+    <p>調子ごとの達成率:</p>
+    <div class="bar-graph-wrap">
+        {% for item in condition_by_rates %}
+            <div class="graph" style="width: {{ item.rate }}%">
+                <span class="name">{{ item.label }}</span>
+                <span class="number">{{ item.rate | round(1) }}%</span>
+            </div>
+        {% endfor %}
+    </div>
+    <p>直近の調子の割合:</p>
+    <div class="bar-graph-wrap pie-wrap">
+        <div class="pie" style="background: {{ pie }}"></div>
+        <ul class="legend">
+            {% for item in composition_ratio %}
+                <li>
+                    <span class="swatch" style="background: {{ item.color }}"></span>
+                        {{ item.label }} {{item.ratio | round(1) }}%
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}
