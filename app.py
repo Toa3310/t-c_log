@@ -1,6 +1,6 @@
 import sqlite3
 import os
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from dotenv import load_dotenv
 from flask import Flask, redirect, render_template, request, session, url_for
@@ -73,6 +73,7 @@ def completion_rate(tasks):
     return done_count / len(tasks) * 100
 
 CONDITION_LABELS = {0: "よくない", 1: "普通", 2: "良い"}
+CONDITION_COLORS = {0: "#0067C0", 1: "#F58220", 2: "#00B16B"}
 
 def make_tasks(condition):
     conn = get_db()
@@ -205,21 +206,43 @@ def edit_template():
 
 @app.route('/stats')
 def stats():
-    condition_rates = []
+    standard_day = date.today() - timedelta(days=30)
+    iso_day = standard_day.isoformat()
+    rate_list = []
+    composition_list = []
+
     conn = get_db()
-    zentai = conn.execute("SELECT AVG(done) * 100 FROM task_logs").fetchone()
-    row = conn.execute("SELECT condition, AVG(done) * 100 FROM task_logs GROUP BY condition").fetchall()
+    all_row = conn.execute("SELECT AVG(done) * 100 FROM task_logs").fetchone()
+    rate_row = conn.execute("SELECT condition, AVG(done) * 100 FROM task_logs GROUP BY condition").fetchall()
+    count_rows = conn.execute("SELECT condition, COUNT(DISTINCT created_at) FROM task_logs WHERE date >= ? GROUP BY condition", (iso_day,)).fetchall()
     conn.close()
-    ach_rate = zentai[0]
-    if ach_rate is None:
-        ach_rate = 0
-    d = {}
-    for r in row:
-        d[r[0]] = r[1]
+
+    all_ach = all_row[0]
+    if all_ach is None:
+        all_ach = 0
+    rate_by_condition = {}
+    count_by_condition = {}
+    for r in rate_row:
+        rate_by_condition[r[0]] = r[1]
+    for row in count_rows:
+        count_by_condition[row[0]] = row[1]
+    total = sum(count_by_condition.values())
     for c in [2,1,0]:
-        rate = d.get(c, 0)
-        condition_rates.append({"label": CONDITION_LABELS[c],"rate": rate,})
-    return render_template("stats.html", rate=ach_rate,condition_rates=condition_rates)
+        achieve_rate = rate_by_condition.get(c, 0)
+        condition_ratio = (count_by_condition.get(c,0) / total) * 100 if total != 0 else 0
+        rate_list.append({"label": CONDITION_LABELS[c],"rate": achieve_rate,})
+        composition_list.append({"label": CONDITION_LABELS[c], "color": CONDITION_COLORS[c] , "ratio": condition_ratio})
+
+    cumulative = 0
+    parts = []
+    for item in composition_list:
+        start = cumulative
+        cumulative += item["ratio"]
+        end = cumulative
+        parts.append(f"{item['color']} {start}% {end}%")
+    pie = "conic-gradient(" + ", ".join(parts) + ")"
+
+    return render_template("stats.html", rate=all_ach, condition_by_rates=rate_list, composition_ratio=composition_list, pie=pie)
 
 if __name__ == "__main__":
     app.run(debug=True)

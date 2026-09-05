@@ -106,3 +106,26 @@ fieldset label {
     font-size: 14px;
     color: #ffffff;
 }
+
+.pie {
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+}
+
+.pie-wrap {
+    align-items: center;
+}
+
+.swatch {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.legend {
+    list-style: none;
+    padding: 0;
+}
