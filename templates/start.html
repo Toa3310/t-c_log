@@ -4,7 +4,7 @@
 
 {% block content %}
     <h1>今日のタスク</h1>
-    <p>進捗: {{ rate }}%</p>
+    <h2>進捗: {{ rate | round(1) }}%</h2>
     {% for task in tasks %}
         <p>
             {{ task.name }}
@@ -13,13 +13,13 @@
             {% else %}
                 <form action="/complete" method="POST">
                     <input type="hidden" name="task_name" value="{{ task.name }}">
-                    <button type="submit">完了</button>
+                    <button class="primary" type="submit">完了</button>
                 </form>
             {% endif %}
         </p>
     {% endfor %}
-    途中終了する場合は下のボタンを押してください
+    <p>途中終了する場合は下のボタンを押してください</p>
     <form action="/cancel" method="POST">
-        <button type="submit">終了</button>
+            <button type="submit">終了</button>
     </form>
 {% endblock %}

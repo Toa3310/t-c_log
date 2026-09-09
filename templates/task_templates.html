@@ -4,7 +4,6 @@
 
 {% block content %}
     <h1>タスクのテンプレート一覧</h1>
-    <p><a href="/">トップに戻る</a></p>
     <form action="/templates/add" method="POST">
         <fieldset>
             <legend>タスクを追加</legend>
@@ -23,7 +22,7 @@
                 <input type="text" name="name" placeholder="例: 過去問10問">
             </label>
 
-            <button type="submit">追加</button>
+            <button class="primary" type="submit">追加</button>
         </fieldset>
     </form>
 

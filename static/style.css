@@ -25,6 +25,11 @@ h1 {
     padding-bottom: 8px;
 }
 
+h2 {
+    font-size: 1.15rem;
+    margin-top: 24px;
+}
+
 table{
     background-color: #ffffff;
     border-collapse: collapse;
@@ -79,12 +84,22 @@ fieldset label {
 }
 
 .danger{
-    color: #c0392b;
-    border-color: #e0b4b0;
+    background-color: #ff4d4f;
+    color: #ffffff;
 }
 
 .danger:hover {
-    background-color: #fbeeec;
+    background-color: #ff3819;
+}
+
+.primary {
+    color: #ffffff;
+    background: #0068b7;
+    border-color: #0068b7;
+}
+
+.primary:hover {
+    background: #00568f;
 }
 
 .nowrap{

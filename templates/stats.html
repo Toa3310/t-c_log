@@ -3,13 +3,13 @@
 {% block title %}統計情報{% endblock %}
 {% block content %}
     <h1>統計</h1>
-    <p>全体の達成率:</p>
+    <h2>全体の達成率:</h2>
     <div class="bar-graph-wrap">
         <div class="graph" style="width: {{ rate }}%">
             <span class="number">{{ rate | round(1) }}%</span>
         </div>
     </div>
-    <p>調子ごとの達成率:</p>
+    <h2>調子ごとの達成率:</h2>
     <div class="bar-graph-wrap">
         {% for item in condition_by_rates %}
             <div class="graph" style="width: {{ item.rate }}%">
@@ -18,7 +18,7 @@
             </div>
         {% endfor %}
     </div>
-    <p>直近の調子の割合:</p>
+    <h2>直近１ヶ月の調子の割合:</h2>
     <div class="bar-graph-wrap pie-wrap">
         <div class="pie" style="background: {{ pie }}"></div>
         <ul class="legend">

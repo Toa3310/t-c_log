@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}tascon{% endblock %}
+{% block title %}Bochi{% endblock %}
 
 {% block content %}
     <h1>今日の調子を選んでください</h1>
@@ -20,6 +20,6 @@
             <input type="checkbox" name="selected_tasks" value="{{task.name}}">
             <label>{{task.name}}</label><br>
         {% endfor %}
-        <button type="submit">このタスクで始める</button>
+        <button class="primary" type="submit">このタスクで始める</button>
     </form>
 {% endblock %}
