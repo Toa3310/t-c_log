@@ -5,23 +5,32 @@
 {% block content %}
     <h1>今日の調子を選んでください</h1>
     <a href="/logs">これまでの記録を見る</a>
-    <a href="/templates">タスクのテンプレート一覧を見る</a></br>
+    <a href="/templates">タスクのテンプレート一覧を見る</a>
+    <a href="/stats">統計を見る</a><br>
     <form action="/tasks" method="POST">
         <button type="submit" name="condition" value="0">よくない</button>
         <button type="submit" name="condition" value="1">普通</button>
         <button type="submit" name="condition" value="2">良い</button>
     </form>
 
-    <h2>今日のタスク</h2>
-    {% if message %}
-        <p style="color: red;">{{ message }}</p>
+    {% if condition is defined %}
+        <h2>今日のタスク</h2>
+        {% if message %}
+            <p style="color: red;">{{ message }}</p>
+        {% endif %}
+        {% if tasks %}
+            <form action="/start" method="POST">
+                <input type="hidden" name="condition" value="{{ condition }}">
+                {% for task in tasks %}
+                    <label>
+                        <input type="checkbox" name="selected_tasks" value="{{ task.id }}">
+                        {{ task.name }}
+                    </label><br>
+                {% endfor %}
+                <button type="submit">このタスクで始める</button>
+            </form>
+        {% else %}
+            <p>この調子のタスクがまだありません。<a href="/templates">テンプレートを追加する</a></p>
+        {% endif %}
     {% endif %}
-    <form action="/start" method="POST">
-        <input type="hidden" name="condition" value="{{ condition }}">
-        {% for task in tasks %}
-            <input type="checkbox" name="selected_tasks" value="{{task.name}}">
-            <label>{{task.name}}</label><br>
-        {% endfor %}
-        <button type="submit">このタスクで始める</button>
-    </form>
 {% endblock %}

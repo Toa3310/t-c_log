@@ -11,6 +11,28 @@ app = Flask(__name__)
 app.secret_key = os.environ["SECRET_KEY"]
 DB_PATH = os.environ["DB_PATH"]
 
+CONDITION_LABELS = {0: "よくない", 1: "普通", 2: "良い"}
+CONDITION_COLORS = {0: "#0067C0", 1: "#F58220", 2: "#00B16B"}
+TASK_NAME_MAX_LENGTH = 50
+STATS_RECENT_DAYS = 30
+
+def parse_condition(value):
+    """フォームの値を調子（0/1/2）に変換する。不正な値なら None を返す。"""
+    try:
+        condition = int(value)
+    except (TypeError, ValueError):
+        return None
+    if condition not in CONDITION_LABELS:
+        return None
+    return condition
+
+def parse_task_name(value):
+    """タスク名の前後の空白を除き、空や長すぎる場合は None を返す。"""
+    name = (value or "").strip()
+    if not name or len(name) > TASK_NAME_MAX_LENGTH:
+        return None
+    return name
+
 def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -72,17 +94,14 @@ def completion_rate(tasks):
     done_count = sum(1 for task in tasks if task["done"])
     return done_count / len(tasks) * 100
 
-CONDITION_LABELS = {0: "よくない", 1: "普通", 2: "良い"}
-CONDITION_COLORS = {0: "#0067C0", 1: "#F58220", 2: "#00B16B"}
-
 def make_tasks(condition):
     conn = get_db()
-    rows = conn.execute("SELECT name FROM task_templates WHERE condition = ?", (condition,)).fetchall()
+    rows = conn.execute("SELECT id, name FROM task_templates WHERE condition = ? ORDER BY id", (condition,)).fetchall()
     conn.close()
 
     tasks = []
     for row in rows:
-        tasks.append({"name": row["name"], "done": False})
+        tasks.append({"id": row["id"], "name": row["name"], "done": False})
     return tasks
 
 @app.route('/')
@@ -91,31 +110,39 @@ def index():
 
 @app.route('/tasks', methods=["POST"])
 def tasks():
-    condition = int(request.form["condition"])
+    condition = parse_condition(request.form.get("condition"))
+    if condition is None:
+        return redirect(url_for("index"))
     task_list = make_tasks(condition)
     return render_template("index.html", tasks=task_list, condition=condition)
 
 @app.route('/start', methods=["POST"])
 def start():
-    selected_names = request.form.getlist("selected_tasks")
-    condition = int(request.form["condition"])
-    if not selected_names:
-        task_list = make_tasks(condition)
-        return render_template("index.html", tasks=task_list, condition=condition, message="タスクを1つ以上選択してください")
+    condition = parse_condition(request.form.get("condition"))
+    if condition is None:
+        return redirect(url_for("index"))
+    task_list = make_tasks(condition)
+    # チェックボックスの値はテンプレートの id。DB にある id だけを採用し、表示順を保つ
+    selected_ids = set(request.form.getlist("selected_tasks"))
     selected_tasks = []
-    for name in selected_names:
-        selected_tasks.append({"name": name, "done": False})
+    for task in task_list:
+        if str(task["id"]) in selected_ids:
+            selected_tasks.append({"name": task["name"], "done": False})
+    if not selected_tasks:
+        return render_template("index.html", tasks=task_list, condition=condition, message="タスクを1つ以上選択してください")
     session["selected_tasks"] = selected_tasks
     session["condition"] = condition
     return render_template("start.html", tasks=selected_tasks, rate=completion_rate(selected_tasks))
 
 @app.route('/complete', methods=["POST"])
 def complete():
-    task_name = request.form["task_name"]
-    selected_tasks = session.get("selected_tasks", [])
-    for task in selected_tasks:
-        if task["name"] == task_name:
-            task["done"] = True
+    selected_tasks = session.get("selected_tasks")
+    if not selected_tasks:
+        return redirect(url_for("index"))
+    # 同名タスクがあっても1つだけ完了にできるよう、名前ではなく位置で指定する
+    task_index = request.form.get("task_index", type=int)
+    if task_index is not None and 0 <= task_index < len(selected_tasks):
+        selected_tasks[task_index]["done"] = True
     session["selected_tasks"] = selected_tasks
     rate = completion_rate(selected_tasks)
     all_done = all(task["done"] for task in selected_tasks)
@@ -126,13 +153,15 @@ def complete():
 
 @app.route('/cancel', methods=["POST"])
 def cancel():
-    selected_tasks = session.get("selected_tasks", [])
+    selected_tasks = session.get("selected_tasks")
+    if not selected_tasks:
+        return redirect(url_for("index"))
     rate = completion_rate(selected_tasks)
     return render_template("cancel.html", tasks=selected_tasks, rate=rate)
 
 @app.route('/save', methods=["POST"])
 def save():
-    memo = request.form.get("memo", "")
+    memo = request.form.get("memo", "").strip()
     selected_tasks = session.get("selected_tasks", [])
     condition = session.get("condition")
     if selected_tasks:
@@ -144,7 +173,7 @@ def save():
 @app.route('/logs')
 def logs():
     conn = get_db()
-    rows = conn.execute("SELECT * FROM task_logs ORDER BY id DESC").fetchall()
+    rows = conn.execute("SELECT * FROM task_logs ORDER BY created_at DESC, id ASC").fetchall()
     conn.close()
     sessions = []
     for row in rows:
@@ -167,17 +196,19 @@ def delete_log():
 @app.route('/templates')
 def templates():
     conn = get_db()
-    rows = conn.execute("SELECT id, condition, name FROM task_templates").fetchall()
+    rows = conn.execute("SELECT id, condition, name FROM task_templates ORDER BY id").fetchall()
     conn.close()
     groups=[]
     for condition in [2, 1, 0]:
         tasks = [row for row in rows if row["condition"] == condition]
         groups.append({"condition": CONDITION_LABELS[condition], "tasks": tasks})
-    return render_template("task_templates.html", groups=groups)
+    return render_template("task_templates.html", groups=groups, name_max_length=TASK_NAME_MAX_LENGTH)
 
 @app.route('/templates/delete', methods=["POST"])
 def delete_template():
-    template_id = request.form["id"]
+    template_id = request.form.get("id", type=int)
+    if template_id is None:
+        return redirect(url_for("templates"))
     conn = get_db()
     conn.execute("DELETE FROM task_templates WHERE id = ?", (template_id,))
     conn.commit()
@@ -186,8 +217,10 @@ def delete_template():
 
 @app.route('/templates/add', methods=["POST"])
 def add_template():
-    condition = request.form["condition"]
-    task_name = request.form["name"]
+    condition = parse_condition(request.form.get("condition"))
+    task_name = parse_task_name(request.form.get("name"))
+    if condition is None or task_name is None:
+        return redirect(url_for("templates"))
     conn = get_db()
     conn.execute("INSERT INTO task_templates (condition, name) VALUES (?, ?)", (condition, task_name))
     conn.commit()
@@ -196,17 +229,19 @@ def add_template():
 
 @app.route('/templates/edit', methods=["POST"])
 def edit_template():
-    id = request.form["id"]
-    name = request.form["name"]
+    template_id = request.form.get("id", type=int)
+    name = parse_task_name(request.form.get("name"))
+    if template_id is None or name is None:
+        return redirect(url_for("templates"))
     conn = get_db()
-    conn.execute("UPDATE task_templates SET name = ? WHERE id = ?", (name, id))
+    conn.execute("UPDATE task_templates SET name = ? WHERE id = ?", (name, template_id))
     conn.commit()
     conn.close()
     return redirect(url_for("templates"))
 
 @app.route('/stats')
 def stats():
-    standard_day = date.today() - timedelta(days=30)
+    standard_day = date.today() - timedelta(days=STATS_RECENT_DAYS)
     iso_day = standard_day.isoformat()
     rate_list = []
     composition_list = []
@@ -217,9 +252,8 @@ def stats():
     count_rows = conn.execute("SELECT condition, COUNT(DISTINCT created_at) FROM task_logs WHERE date >= ? GROUP BY condition", (iso_day,)).fetchall()
     conn.close()
 
+    # 記録が1件もなければ None（テンプレート側で「まだ記録がありません」と表示する）
     all_ach = all_row[0]
-    if all_ach is None:
-        all_ach = 0
     rate_by_condition = {}
     count_by_condition = {}
     for r in rate_row:
@@ -228,21 +262,25 @@ def stats():
         count_by_condition[row[0]] = row[1]
     total = sum(count_by_condition.values())
     for c in [2,1,0]:
-        achieve_rate = rate_by_condition.get(c, 0)
+        # その調子の記録がなければ None（0% と区別するため）
+        achieve_rate = rate_by_condition.get(c)
         condition_ratio = (count_by_condition.get(c,0) / total) * 100 if total != 0 else 0
         rate_list.append({"label": CONDITION_LABELS[c],"rate": achieve_rate,})
         composition_list.append({"label": CONDITION_LABELS[c], "color": CONDITION_COLORS[c] , "ratio": condition_ratio})
 
-    cumulative = 0
-    parts = []
-    for item in composition_list:
-        start = cumulative
-        cumulative += item["ratio"]
-        end = cumulative
-        parts.append(f"{item['color']} {start}% {end}%")
-    pie = "conic-gradient(" + ", ".join(parts) + ")"
+    # 直近の記録がないと全区間 0% になり、conic-gradient が最後の色で塗りつぶされてしまうので描画しない
+    pie = None
+    if total != 0:
+        cumulative = 0
+        parts = []
+        for item in composition_list:
+            start = cumulative
+            cumulative += item["ratio"]
+            end = cumulative
+            parts.append(f"{item['color']} {start}% {end}%")
+        pie = "conic-gradient(" + ", ".join(parts) + ")"
 
-    return render_template("stats.html", rate=all_ach, condition_by_rates=rate_list, composition_ratio=composition_list, pie=pie)
+    return render_template("stats.html", rate=all_ach, condition_by_rates=rate_list, composition_ratio=composition_list, pie=pie, recent_days=STATS_RECENT_DAYS)
 
 if __name__ == "__main__":
     app.run(debug=True)

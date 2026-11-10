@@ -10,7 +10,7 @@
             <li>{{ task.name }} ✅</li>
         {% endfor %}
     </ul>
-    <p>進捗: {{ rate }}%</p>
+    <p>進捗: {{ rate | round | int }}%</p>
 
     <form action="/save" method="POST">
         <label for="memo">今日の振り返り（一言メモ）</label><br>

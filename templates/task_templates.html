@@ -20,7 +20,7 @@
 
             <label>
                 タスク名
-                <input type="text" name="name" placeholder="例: 過去問10問">
+                <input type="text" name="name" placeholder="例: 過去問10問" required maxlength="{{ name_max_length }}">
             </label>
 
             <button type="submit">追加</button>
@@ -29,12 +29,15 @@
 
     {% for g in groups %}
         <h2>{{ g.condition }}</h2>
+        {% if not g.tasks %}
+            <p>まだタスクがありません。</p>
+        {% endif %}
         <ul>
             {% for task in g.tasks %}
                 <li>
                     <form action="/templates/edit" method="POST">
                         <input type="hidden" name="id" value="{{ task.id }}">
-                        <input type="text" name="name" value="{{ task.name }}">
+                        <input type="text" name="name" value="{{ task.name }}" required maxlength="{{ name_max_length }}">
                         <button type="submit">更新</button>
                     </form>
 

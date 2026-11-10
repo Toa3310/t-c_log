@@ -129,3 +129,15 @@ fieldset label {
     list-style: none;
     padding: 0;
 }
+
+.graph-empty {
+    height: 50px;
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    box-sizing: border-box;
+    color: #888;
+    font-size: 14px;
+    border: 1px dashed #ccc;
+    border-radius: 4px;
+}
