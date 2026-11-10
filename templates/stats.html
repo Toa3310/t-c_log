@@ -1,46 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}統計情報{% endblock %}
-{% block content %}
-    <h1>統計</h1>
-    <p><a href="/">トップに戻る</a></p>
-    {% if rate is none %}
-        <p>まだ記録がありません。タスクを記録すると、ここに達成率が表示されます。</p>
-    {% else %}
-        <p>全体の達成率:</p>
-        <div class="bar-graph-wrap">
-            <div class="graph" style="width: {{ rate }}%">
-                <span class="number">{{ rate | round(1) }}%</span>
-            </div>
-        </div>
-        <p>調子ごとの達成率:</p>
-        <div class="bar-graph-wrap">
-            {% for item in condition_by_rates %}
-                {% if item.rate is none %}
-                    <div class="graph-empty">{{ item.label }}: データなし</div>
-                {% else %}
-                    <div class="graph" style="width: {{ item.rate }}%">
-                        <span class="name">{{ item.label }}</span>
-                        <span class="number">{{ item.rate | round(1) }}%</span>
-                    </div>
-                {% endif %}
-            {% endfor %}
-        </div>
-        <p>直近{{ recent_days }}日の調子の割合:</p>
-        <div class="bar-graph-wrap pie-wrap">
-            {% if pie is none %}
-                <p>直近{{ recent_days }}日の記録がありません。</p>
-            {% else %}
-                <div class="pie" style="background: {{ pie }}"></div>
-                <ul class="legend">
-                    {% for item in composition_ratio %}
-                        <li>
-                            <span class="swatch" style="background: {{ item.color }}"></span>
-                                {{ item.label }} {{item.ratio | round(1) }}%
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        </div>
-    {% endif %}
-{% endblock %}
+{% block title %}統計{% endblock %}
+{% block page %}stats{% endblock %}
+{% block data %}{{ {
+    "rate": rate,
+    "totalTasks": total_tasks,
+    "doneTasks": done_tasks,
+    "conditionRates": condition_by_rates,
+    "composition": composition,
+    "recentTotal": recent_total,
+    "recentDays": recent_days,
+} | tojson }}{% endblock %}

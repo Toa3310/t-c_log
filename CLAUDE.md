@@ -13,17 +13,24 @@ tascon（仮称） は、その日の「調子（コンディション）」（�
 - 初回セットアップ: `.env.example` を `.env` にコピーして `SECRET_KEY` と `DB_PATH` を設定
 - CLI 版プロトタイプの実行: `python task_condition_log.py`
 
-lint・ビルド・テストの仕組みは何も設定されていない（pytest なし、JS ツールチェーンなし、CI なし）。
+lint・ビルド・テストの仕組みは何も設定されていない（pytest なし、JS ツールチェーン・ビルドなし、CI なし）。
+
+Astryx のコンポーネント API を調べるときは `npx @astryxdesign/cli component <Name>`（例: `Button`）、一覧は `npx @astryxdesign/cli component --list`（Node.js が必要。プロジェクトには入れていない）。
 
 ## アーキテクチャ
 
 - `app.py` — Flask アプリ本体。ルーティング、セッションベースの状態管理、DB 初期化（`init_db()`、テンプレートの初期データ投入を含む）、入力のバリデーション（`parse_condition()` / `parse_task_name()`）がすべてこの1ファイルに収まっている。Blueprint やビジネスロジック用の別モジュールには分割されていない。
-- `templates/index.html`、`templates/start.html`、`templates/complete.html`、 `templates/base.html`、 `templates/cancel.html`、 `templates/logs.html`、 `templates/task_templates.html`、 `templates/stats.html` — Jinja2 テンプレート。CSSは `static/style.css` を導入、JSはなし。
+- `templates/*.html` — Jinja2 テンプレート。`base.html` が共通の `<head>`（Astryx の CSS とフォント、import map）を持ち、各ページは `{% block page %}`（読み込む JS の名前）と `{% block data %}`（ページのデータを `tojson` で JSON 化したもの）だけを定義する。HTML の中身は書かない。
+- `static/js/ui.js`、`static/js/pages/*.js` — 画面の描画。Meta のデザインシステム [Astryx](https://github.com/meta/astryx)（React 19）を CDN（esm.sh / jsdelivr）から import map で読み込み、ビルドなしで動かす。JSX は使えないので htm のタグ付きテンプレート（`` h`...` ``）で書く。`ui.js` に共通部品（`AppFrame`＝ナビ付きの枠、`PostForm`、調子ごとの色 `CONDITION_STYLES` など）、`pages/` にページごとのモジュール（`complete.html` と `cancel.html` は `finish.js` を共有）。
+  - フォームは `PostForm` で通常の POST として Flask のルートに送る（fetch や JSON API は使わない）。Astryx の入力部品は `htmlName` で name 属性を付けられる。`CheckboxInput` は値を送れないので、選択中の id は hidden input で送っている。
+  - Astryx のバージョンは `base.html` で 0.7.4 に固定している（CSS 3つ・import map 3つ）。上げるときは全部そろえて変えること。
+  - 調子の色は「よくない < 普通 < 良い」の順序がある尺度として、オレンジ・グレー・青（Astryx のデータ可視化トークン）にしている。赤緑の組み合わせは色覚多様性の点で避けた。
+- `static/style.css` — Astryx のコンポーネントにない部分（統計のセグメントバー、色見本など）だけ。色は Astryx のトークン（`var(--color-…)`）を使い、ダークモードに追従させる。
 - `task_condition_log.py` — スタンドアロンの CLI プロトタイプ（`input()` による対話型）。`app.py` のロジックはここから移植されたもの。`completion_rate` やタスクテンプレートのロジックが `app.py` と重複しており、`app.py` からこれを import してはいない。片方を修正する際はもう片方にも同じ修正が必要か確認すること。
 
 ### リクエストフロー（セッションを使ったステートマシン）
 
-作業中の状態（`selected_tasks`）はセッション、確定した記録（`task_logs`）とタスクテンプレート（`task_templates`）はSQLiteに保存する。JS/localStorageは使わない
+作業中の状態（`selected_tasks`）はセッション、確定した記録（`task_logs`）とタスクテンプレート（`task_templates`）はSQLiteに保存する。JS は描画のためだけに使い、状態を localStorage などに持たない（ページを読み込み直してもサーバーの状態から再描画できる）
 
 1. `GET /` → `index.html` — コンディション（0/1/2）選択ボタンを表示。
 2. `POST /tasks` → `make_tasks(condition)` が DB の `task_templates` からコンディションごとのタスク（`id`・`name`）を返し、`index.html` をチェックボックス付きで再描画（コンディションは hidden input で引き継ぐ）。チェックボックスの値はテンプレートの `id`。

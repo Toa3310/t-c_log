@@ -1,25 +1,5 @@
 {% extends "base.html" %}
 
 {% block title %}今日のタスク{% endblock %}
-
-{% block content %}
-    <h1>今日のタスク</h1>
-    <p>進捗: {{ rate | round | int }}%</p>
-    {% for task in tasks %}
-        <div>
-            {{ task.name }}
-            {% if task.done %}
-                ✅
-            {% else %}
-                <form action="/complete" method="POST">
-                    <input type="hidden" name="task_index" value="{{ loop.index0 }}">
-                    <button type="submit">完了</button>
-                </form>
-            {% endif %}
-        </div>
-    {% endfor %}
-    <p>途中終了する場合は下のボタンを押してください</p>
-    <form action="/cancel" method="POST">
-        <button type="submit">終了</button>
-    </form>
-{% endblock %}
+{% block page %}start{% endblock %}
+{% block data %}{{ {"tasks": tasks, "rate": rate} | tojson }}{% endblock %}

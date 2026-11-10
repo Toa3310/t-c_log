@@ -1,143 +1,69 @@
+/*
+ * 見た目の大部分は Astryx（theme-neutral）が担当する。
+ * ここには Astryx のコンポーネントにない部分だけを書き、色や余白は Astryx のトークン（CSS 変数）を使う。
+ * そうすることでライト／ダークモードの切り替えにも自動で追従する。
+ */
+
 body {
-    font-family: sans-serif;
-    background-color: #fffaf0;
-    color: #333;
-    max-width: 640px;
-    margin: 0 auto;
-    padding: 24px 16px;
-    line-height: 1.7;
+    /* テーマは欧文フォント（Figtree）しか指定しないので、日本語用に Noto Sans JP を足す */
+    font-family: "Figtree", "Noto Sans JP", var(--font-family-body), sans-serif;
+    background-color: var(--color-background-body);
+    color: var(--color-text-primary);
 }
 
-h1 {
-    font-size: 1.4rem;
-    border-bottom: 2px solid #ddd;
-    padding-bottom: 8px;
-}
-
-table{
-    background-color: #ffffff;
-    border-collapse: collapse;
-}
-
-th, td{
-    border: 1px solid #ddd;
-    padding: 8px 12px;
-}
-
-button{
-    background-color: #ffffff;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    padding: 6px 14px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-button:hover {
-    background-color: #eee;
-}
-
-textarea{
-    min-width: 100px;
-    min-height: 50px;
-    max-width: 300px;
-    max-height: 100px;
-    background-color: #ffffff;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    padding: 6px 14px;
-    font-size: 0.9rem;
-}
-
-fieldset {
-    background-color: #ffffff;
-}
-
-input, select {
-    background-color: #ffffff;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    padding: 6px 14px;
-    font-size: 0.9rem;
-}
-
-fieldset label {
+/* JS モジュールを読み込んでいる間、真っ白に見えないようにする */
+#root:empty::after {
+    content: "読み込み中…";
     display: block;
-    margin-bottom: 12px;
+    padding: 2rem;
+    color: var(--color-text-secondary);
 }
 
-.danger{
-    color: #c0392b;
-    border-color: #e0b4b0;
+/* ページ本文の幅 */
+.page {
+    width: 100%;
+    max-width: 720px;
+    margin-inline: auto;
 }
 
-.danger:hover {
-    background-color: #fbeeec;
-}
-
-.nowrap{
-    white-space: nowrap;
-}
-
-.bar-graph-wrap {
-    position: relative;
-    background-color: #ffffff;
-    border-radius: 4px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.bar-graph-wrap .graph {
-    height: 50px;
-    background: #03a9f4;
-    border-radius: 0 4px 4px 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px;
-    box-sizing: border-box;
-}
-
-.graph span {
-    font-size: 14px;
-    color: #ffffff;
-}
-
-.pie {
-    width: 300px;
-    height: 300px;
-    border-radius: 50%;
-}
-
-.pie-wrap {
-    align-items: center;
-}
-
+/* 調子の色見本（凡例・カード内） */
 .swatch {
     display: inline-block;
-    width: 14px;
-    height: 14px;
-    margin-right: 6px;
-    vertical-align: middle;
+    flex-shrink: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
 }
 
-.legend {
-    list-style: none;
-    padding: 0;
+/* 統計: いちばん大きく見せる数字（全体の達成率） */
+.hero-figure {
+    font-size: 48px;
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--color-text-primary);
 }
 
-.graph-empty {
-    height: 50px;
+/* 統計: 直近の調子の割合を表す横一本の帯（細いセグメントバー） */
+.segment-bar {
     display: flex;
-    align-items: center;
-    padding: 12px;
-    box-sizing: border-box;
-    color: #888;
-    font-size: 14px;
-    border: 1px dashed #ccc;
-    border-radius: 4px;
+    gap: 2px;
+    height: 8px;
+}
+
+.segment-bar > span {
+    min-width: 4px;
+    border-radius: 999px;
+}
+
+/* 統計: 記録のない調子の行 */
+.meter-empty {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+/* テンプレート編集: 入力欄を伸ばし、ボタンは横に並べる */
+.row-input {
+    flex: 1;
+    min-width: 0;
 }

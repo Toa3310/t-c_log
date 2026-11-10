@@ -1,12 +1,39 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-astryx-theme="neutral">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}tascon{% endblock %}</title>
+    <title>{% block title %}tascon{% endblock %} | tascon</title>
+
+    {# UI は Astryx（https://github.com/meta/astryx）を CDN から読み込む。バージョンはすべて固定する #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@astryxdesign/core@0.7.4/src/reset.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@astryxdesign/core@0.7.4/dist/astryx.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@astryxdesign/theme-neutral@0.7.4/dist/theme.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script type="importmap">
+        {
+            "imports": {
+                "react": "https://esm.sh/react@19.2.0",
+                "react/jsx-runtime": "https://esm.sh/react@19.2.0/jsx-runtime",
+                "react-dom": "https://esm.sh/react-dom@19.2.0",
+                "react-dom/client": "https://esm.sh/react-dom@19.2.0/client",
+                "htm": "https://esm.sh/htm@3.1.1",
+                "@astryxdesign/core": "https://esm.sh/@astryxdesign/core@0.7.4?external=react,react-dom",
+                "@astryxdesign/theme-neutral": "https://esm.sh/@astryxdesign/theme-neutral@0.7.4?external=react,react-dom",
+                "@astryxdesign/core/locales/ja-JP": "https://cdn.jsdelivr.net/npm/@astryxdesign/core@0.7.4/dist/i18n/generated-locales/ja-JP.generated.js"
+            }
+        }
+    </script>
 </head>
 <body>
-    {% block content %}{% endblock %}
+    <div id="root"></div>
+    <noscript>このアプリの表示には JavaScript を有効にしてください。</noscript>
+
+    {# ページごとのデータ。tojson は <, >, & をエスケープするので script 内に埋め込んでも安全 #}
+    <script type="application/json" id="page-data">{% block data %}{}{% endblock %}</script>
+    <script type="module" src="{{ url_for('static', filename='js/pages/' ~ self.page()|trim ~ '.js') }}"></script>
 </body>
 </html>

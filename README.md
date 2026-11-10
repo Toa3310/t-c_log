@@ -84,6 +84,8 @@
 - python-dotenv
 - HTML
 - CSS
+- JavaScript（ビルドなし。import map で CDN から読み込み）
+- [Astryx](https://github.com/meta/astryx)（Meta のデザインシステム。React 19）
 - （予定）Render（デプロイ）
 
 ---
@@ -95,6 +97,8 @@ pip install -r requirements.txt
 cp .env.example .env   # SECRET_KEY と DB_PATH を設定する
 python app.py          # http://localhost:5000
 ```
+
+画面の部品（Astryx・React）は CDN から読み込むため、表示にはインターネット接続が必要です。
 
 CLI版プロトタイプは `python task_condition_log.py` で実行できます。
 

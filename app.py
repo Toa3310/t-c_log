@@ -12,8 +12,10 @@ app.secret_key = os.environ["SECRET_KEY"]
 DB_PATH = os.environ["DB_PATH"]
 
 CONDITION_LABELS = {0: "よくない", 1: "普通", 2: "良い"}
-CONDITION_COLORS = {0: "#0067C0", 1: "#F58220", 2: "#00B16B"}
+# 画面に並べる順（良い → よくない）。色などの見た目は static/js/ui.js 側で持つ
+CONDITION_ORDER = [2, 1, 0]
 TASK_NAME_MAX_LENGTH = 50
+MEMO_MAX_LENGTH = 200
 STATS_RECENT_DAYS = 30
 
 def parse_condition(value):
@@ -32,6 +34,12 @@ def parse_task_name(value):
     if not name or len(name) > TASK_NAME_MAX_LENGTH:
         return None
     return name
+
+@app.context_processor
+def inject_condition_options():
+    """調子の選択肢を全テンプレートで使えるようにする（JS へ渡すページデータ用）"""
+    options = [{"value": c, "label": CONDITION_LABELS[c]} for c in CONDITION_ORDER]
+    return {"condition_options": options}
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)
@@ -147,7 +155,7 @@ def complete():
     rate = completion_rate(selected_tasks)
     all_done = all(task["done"] for task in selected_tasks)
     if all_done:
-        return render_template("complete.html", tasks=selected_tasks, rate=rate)
+        return render_template("complete.html", tasks=selected_tasks, rate=rate, memo_max_length=MEMO_MAX_LENGTH)
 
     return render_template("start.html", tasks=selected_tasks, rate=rate)
 
@@ -157,11 +165,11 @@ def cancel():
     if not selected_tasks:
         return redirect(url_for("index"))
     rate = completion_rate(selected_tasks)
-    return render_template("cancel.html", tasks=selected_tasks, rate=rate)
+    return render_template("cancel.html", tasks=selected_tasks, rate=rate, memo_max_length=MEMO_MAX_LENGTH)
 
 @app.route('/save', methods=["POST"])
 def save():
-    memo = request.form.get("memo", "").strip()
+    memo = request.form.get("memo", "").strip()[:MEMO_MAX_LENGTH]
     selected_tasks = session.get("selected_tasks", [])
     condition = session.get("condition")
     if selected_tasks:
@@ -178,10 +186,14 @@ def logs():
     sessions = []
     for row in rows:
         key = (row["condition"], row["created_at"])
+        task = {"name": row["task_name"], "done": bool(row["done"])}
         if sessions and sessions[-1]["key"] == key:
-            sessions[-1]["tasks"].append(row)
+            sessions[-1]["tasks"].append(task)
         else:
-            sessions.append({"key": key, "condition": CONDITION_LABELS[row["condition"]], "created_at": row["created_at"], "memo": row["memo"], "tasks": [row]})
+            sessions.append({"key": key, "condition": row["condition"], "condition_label": CONDITION_LABELS[row["condition"]], "created_at": row["created_at"], "memo": row["memo"], "tasks": [task]})
+    # key はグルーピング用なので、JS に渡す前に取り除く
+    for s in sessions:
+        del s["key"]
     return render_template("logs.html", sessions=sessions)
 
 @app.route('/logs/delete', methods=["POST"])
@@ -199,9 +211,9 @@ def templates():
     rows = conn.execute("SELECT id, condition, name FROM task_templates ORDER BY id").fetchall()
     conn.close()
     groups=[]
-    for condition in [2, 1, 0]:
-        tasks = [row for row in rows if row["condition"] == condition]
-        groups.append({"condition": CONDITION_LABELS[condition], "tasks": tasks})
+    for condition in CONDITION_ORDER:
+        tasks = [{"id": row["id"], "name": row["name"]} for row in rows if row["condition"] == condition]
+        groups.append({"condition": condition, "label": CONDITION_LABELS[condition], "tasks": tasks})
     return render_template("task_templates.html", groups=groups, name_max_length=TASK_NAME_MAX_LENGTH)
 
 @app.route('/templates/delete', methods=["POST"])
@@ -243,44 +255,45 @@ def edit_template():
 def stats():
     standard_day = date.today() - timedelta(days=STATS_RECENT_DAYS)
     iso_day = standard_day.isoformat()
-    rate_list = []
-    composition_list = []
 
     conn = get_db()
-    all_row = conn.execute("SELECT AVG(done) * 100 FROM task_logs").fetchone()
+    total_row = conn.execute("SELECT COUNT(*), SUM(done) FROM task_logs").fetchone()
     rate_row = conn.execute("SELECT condition, AVG(done) * 100 FROM task_logs GROUP BY condition").fetchall()
     count_rows = conn.execute("SELECT condition, COUNT(DISTINCT created_at) FROM task_logs WHERE date >= ? GROUP BY condition", (iso_day,)).fetchall()
     conn.close()
 
+    total_tasks = total_row[0]
+    done_tasks = total_row[1] or 0
     # 記録が1件もなければ None（テンプレート側で「まだ記録がありません」と表示する）
-    all_ach = all_row[0]
+    all_ach = done_tasks / total_tasks * 100 if total_tasks else None
+
     rate_by_condition = {}
     count_by_condition = {}
     for r in rate_row:
         rate_by_condition[r[0]] = r[1]
     for row in count_rows:
         count_by_condition[row[0]] = row[1]
-    total = sum(count_by_condition.values())
-    for c in [2,1,0]:
+    recent_total = sum(count_by_condition.values())
+
+    rate_list = []
+    composition_list = []
+    for c in CONDITION_ORDER:
         # その調子の記録がなければ None（0% と区別するため）
-        achieve_rate = rate_by_condition.get(c)
-        condition_ratio = (count_by_condition.get(c,0) / total) * 100 if total != 0 else 0
-        rate_list.append({"label": CONDITION_LABELS[c],"rate": achieve_rate,})
-        composition_list.append({"label": CONDITION_LABELS[c], "color": CONDITION_COLORS[c] , "ratio": condition_ratio})
+        rate_list.append({"condition": c, "label": CONDITION_LABELS[c], "rate": rate_by_condition.get(c)})
+        count = count_by_condition.get(c, 0)
+        ratio = count / recent_total * 100 if recent_total else 0
+        composition_list.append({"condition": c, "label": CONDITION_LABELS[c], "count": count, "ratio": ratio})
 
-    # 直近の記録がないと全区間 0% になり、conic-gradient が最後の色で塗りつぶされてしまうので描画しない
-    pie = None
-    if total != 0:
-        cumulative = 0
-        parts = []
-        for item in composition_list:
-            start = cumulative
-            cumulative += item["ratio"]
-            end = cumulative
-            parts.append(f"{item['color']} {start}% {end}%")
-        pie = "conic-gradient(" + ", ".join(parts) + ")"
-
-    return render_template("stats.html", rate=all_ach, condition_by_rates=rate_list, composition_ratio=composition_list, pie=pie, recent_days=STATS_RECENT_DAYS)
+    return render_template(
+        "stats.html",
+        rate=all_ach,
+        total_tasks=total_tasks,
+        done_tasks=done_tasks,
+        condition_by_rates=rate_list,
+        composition=composition_list,
+        recent_total=recent_total,
+        recent_days=STATS_RECENT_DAYS,
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)
