@@ -5,3 +5,4 @@ __pycache__/
 memo/
 .claude/
 *.db
+backend/target/

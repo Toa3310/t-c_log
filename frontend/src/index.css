@@ -1,0 +1,69 @@
+/*
+ * 見た目の大部分は Astryx（theme-neutral）が担当する。
+ * ここには Astryx のコンポーネントにない部分だけを書き、色は Astryx のトークン（CSS 変数）を使う。
+ * そうすることでライト／ダークモードの切り替えにも自動で追従する。
+ */
+
+body {
+  /* テーマは欧文フォント（Figtree）しか指定しないので、日本語は OS のフォントを使う */
+  font-family: 'Figtree', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Yu Gothic UI',
+    Meiryo, var(--font-family-body), sans-serif;
+  background-color: var(--color-background-body);
+  color: var(--color-text-primary);
+}
+
+/* ページ本文の幅 */
+.page {
+  width: 100%;
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+/* 調子の色見本（凡例・カード内） */
+.swatch {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+/* 統計: いちばん大きく見せる数字（全体の達成率） */
+.hero-figure {
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--color-text-primary);
+}
+
+/* 統計: 直近の調子の割合を表す横一本の帯（細いセグメントバー） */
+.segment-bar {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+}
+
+.segment-bar > span {
+  min-width: 4px;
+  border-radius: 999px;
+}
+
+/* 統計: 記録のない調子の行 */
+.meter-empty {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* テンプレート編集: 入力欄を伸ばし、ボタンは横に並べる */
+.row-input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 読み込み中の表示 */
+.loading {
+  display: flex;
+  justify-content: center;
+  padding-block: 48px;
+}

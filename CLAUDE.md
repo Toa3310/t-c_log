@@ -4,48 +4,87 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## プロジェクト概要
 
-tascon（仮称） は、その日の「調子（コンディション）」（集中度・気分：よくない／普通／いい）に応じて学習タスクを提案する、小規模な Flask 学習用プロジェクトです。タスクを単独で管理するのではなく、その日のコンディションと結びつける点が特徴です。現在は CLI 版プロトタイプから Flask を用いた Web アプリへ移行中です。コミットメッセージやテンプレート内の文言は日本語が基本なので、ドキュメントやコミットメッセージも日本語で書くこと。
+tascon（仮称） は、その日の「調子（コンディション）」（集中度・気分：よくない／普通／良い）に応じて学習タスクを提案する、小規模な学習用プロジェクトです。タスクを単独で管理するのではなく、その日のコンディションと結びつける点が特徴です。バックエンドは Rust（axum）の JSON API、フロントエンドは Vite + React + TypeScript で、Docker でまとめて動かせます（以前は Flask だったが、機能はそのままに置き換えた）。コミットメッセージや画面の文言は日本語が基本なので、ドキュメントやコミットメッセージ、コード中のコメントも日本語で書くこと。
 
 ## コマンド
 
-- Web アプリの起動: `python app.py`（Flask 開発サーバー、debug モード、デフォルトで `http://localhost:5000`）
-- 依存関係のインストール: `pip install -r requirements.txt`
-- 初回セットアップ: `.env.example` を `.env` にコピーして `SECRET_KEY` と `DB_PATH` を設定
-- CLI 版プロトタイプの実行: `python task_condition_log.py`
+初回: `.env.example` を `.env` にコピーして値を設定する（`SECRET_KEY` は必須）。
 
-lint・ビルド・テストの仕組みは何も設定されていない（pytest なし、JS ツールチェーン・ビルドなし、CI なし）。
+- Docker で起動: `docker compose up -d --build` → `http://localhost:8080`（ポートは `.env` の `TASCON_PORT`）
+- バックエンド（`backend/`）
+  - 起動: `cargo run`（`.env` の `ADDR`、既定 `127.0.0.1:8080` で API だけを提供）
+  - テスト: `cargo test`（`src/domain.rs` の単体テストと `tests/api.rs` の API テスト。メモリ上の SQLite を使う）
+  - 1つだけ: `cargo test --test api full_flow_with_duplicate_names`
+- フロントエンド（`frontend/`）
+  - 初回: `npm install`
+  - 開発サーバー: `npm run dev`（`/api` は `.env` の `ADDR` に転送される）
+  - 型チェック＋ビルド: `npm run build`（`tsc -b` のあと `vite build`、出力は `frontend/dist`）
+  - lint: `npm run lint`（oxlint）
+- CLI 版プロトタイプ: `python task_condition_log.py`
 
-Astryx のコンポーネント API を調べるときは `npx @astryxdesign/cli component <Name>`（例: `Button`）、一覧は `npx @astryxdesign/cli component --list`（Node.js が必要。プロジェクトには入れていない）。
+Astryx のコンポーネント API を調べるときは `npx @astryxdesign/cli component <Name>`（例: `Button`）、一覧は `npx @astryxdesign/cli component --list`。型は `frontend/node_modules/@astryxdesign/core/dist/*/*.d.ts` にもある。
+
+CI は無い。
 
 ## アーキテクチャ
 
-- `app.py` — Flask アプリ本体。ルーティング、セッションベースの状態管理、DB 初期化（`init_db()`、テンプレートの初期データ投入を含む）、入力のバリデーション（`parse_condition()` / `parse_task_name()`）がすべてこの1ファイルに収まっている。Blueprint やビジネスロジック用の別モジュールには分割されていない。
-- `templates/*.html` — Jinja2 テンプレート。`base.html` が共通の `<head>`（Astryx の CSS とフォント、import map）を持ち、各ページは `{% block page %}`（読み込む JS の名前）と `{% block data %}`（ページのデータを `tojson` で JSON 化したもの）だけを定義する。HTML の中身は書かない。
-- `static/js/ui.js`、`static/js/pages/*.js` — 画面の描画。Meta のデザインシステム [Astryx](https://github.com/meta/astryx)（React 19）を CDN（esm.sh / jsdelivr）から import map で読み込み、ビルドなしで動かす。JSX は使えないので htm のタグ付きテンプレート（`` h`...` ``）で書く。`ui.js` に共通部品（`AppFrame`＝ナビ付きの枠、`PostForm`、調子ごとの色 `CONDITION_STYLES` など）、`pages/` にページごとのモジュール（`complete.html` と `cancel.html` は `finish.js` を共有）。
-  - フォームは `PostForm` で通常の POST として Flask のルートに送る（fetch や JSON API は使わない）。Astryx の入力部品は `htmlName` で name 属性を付けられる。`CheckboxInput` は値を送れないので、選択中の id は hidden input で送っている。
-  - Astryx のバージョンは `base.html` で 0.7.4 に固定している（CSS 3つ・import map 3つ）。上げるときは全部そろえて変えること。
-  - 調子の色は「よくない < 普通 < 良い」の順序がある尺度として、オレンジ・グレー・青（Astryx のデータ可視化トークン）にしている。赤緑の組み合わせは色覚多様性の点で避けた。
-- `static/style.css` — Astryx のコンポーネントにない部分（統計のセグメントバー、色見本など）だけ。色は Astryx のトークン（`var(--color-…)`）を使い、ダークモードに追従させる。
-- `task_condition_log.py` — スタンドアロンの CLI プロトタイプ（`input()` による対話型）。`app.py` のロジックはここから移植されたもの。`completion_rate` やタスクテンプレートのロジックが `app.py` と重複しており、`app.py` からこれを import してはいない。片方を修正する際はもう片方にも同じ修正が必要か確認すること。
+```
+backend/   Rust（axum）。JSON API（/api/...）と、frontend/dist の配信
+frontend/  Vite + React 19 + TypeScript。UI は Meta のデザインシステム Astryx
+Dockerfile, compose.yaml  フロント→バックの順にビルドし、実行ファイル1つ＋静的ファイルの小さなイメージにする
+task_condition_log.py     CLI 版プロトタイプ（Python、標準ライブラリのみ）
+```
 
-### リクエストフロー（セッションを使ったステートマシン）
+### バックエンド（`backend/src`）
 
-作業中の状態（`selected_tasks`）はセッション、確定した記録（`task_logs`）とタスクテンプレート（`task_templates`）はSQLiteに保存する。JS は描画のためだけに使い、状態を localStorage などに持たない（ページを読み込み直してもサーバーの状態から再描画できる）
+- `main.rs` — 環境変数（`SECRET_KEY`・`DB_PATH`・`ADDR`・`STATIC_DIR`）を読み、DB を開いてサーバーを起動する。`.env` は `dotenvy` で親ディレクトリまで探す。SIGTERM（`docker stop`）で正しく終了する。
+- `lib.rs` — `AppState`（SQLite の接続1本を `Mutex` で共有、Cookie 暗号化の鍵）と `router()`。`STATIC_DIR` があれば API 以外のパスは静的ファイル、無ければ `index.html` を返す（React Router のため）。テストからも `router()` を使う。
+- `domain.rs` — 調子のラベル・並び順、入力の検証（`parse_condition`・`parse_task_name`・`normalize_memo`）、`completion_rate`、上限値（タスク名50文字、メモ200文字、1回に選べるタスク10件、統計の直近30日）。HTTP や DB に依存しない。
+- `db.rs` — SQLite（`rusqlite`、`bundled` なので OS の libsqlite3 は不要）。テーブル構成は Flask 版と同じ（`task_logs`・`task_templates`）なので、以前の DB ファイルをそのまま使える。`init()` がテーブル作成・`memo` 列の移行・初期テンプレートの投入を行う。
+- `session.rs` — 進行中のタスク（`ActiveSession`）を **暗号化 Cookie**（`PrivateCookieJar`、鍵は `SECRET_KEY` の SHA-512）に入れる。記録するまで DB には書かない（Flask 版のセッションと同じ考え方）。Cookie のサイズ上限（約4KB）のため、選べるタスクを10件までにしている。
+- `error.rs` — `ApiError`。どのエラーも `{"error": "日本語のメッセージ"}` の JSON で返す（400 入力エラー／404／409 状態が合わない／500）。
+- `routes/` — ハンドラー。`ApiJson`・`ApiPath` は axum の `Json`・`Path` と同じだが、失敗時に `ApiError` を返す。JSON のキーは `camelCase`。
 
-1. `GET /` → `index.html` — コンディション（0/1/2）選択ボタンを表示。
-2. `POST /tasks` → `make_tasks(condition)` が DB の `task_templates` からコンディションごとのタスク（`id`・`name`）を返し、`index.html` をチェックボックス付きで再描画（コンディションは hidden input で引き継ぐ）。チェックボックスの値はテンプレートの `id`。
-3. `POST /start` → 選択された `id` を DB のテンプレートと照合して名前に変換し（存在しない `id` は無視）、1つ以上選択されているかサーバー側でバリデーション（HTML の `required` だけではチェックボックスグループの最小選択数を強制できないため）。`session["selected_tasks"]` に保存し、進捗率とともに `start.html` を描画。
-4. `POST /complete` → `task_index`（`selected_tasks` 内の位置）で該当タスクを完了状態にし（同名タスクが複数あっても1つだけ完了にするため、名前では照合しない）、進捗率を再計算。すべて完了していれば `complete.html` を、そうでなければ更新後の `start.html` を描画する。同じルートでも状態によって返すテンプレートが分岐する点に注意。
-5. `POST /cancel` → セッションの `selected_tasks` を読み、進捗率とともにcancel.html(途中終了画面)を表示。ここではまだDBに保存しない。
-6. `POST /save` → フォームの `memo` とセッションの内容を `save_logs()` でDBに書き込み、セッションを空にして `/logs` にリダイレクト。
-7. `GET /logs` → DB全体を取得し、同じセッション(`created_at`)ごとにまとめ、 `logs.html` に一覧表示する。
-8. `POST /logs/delete` → `created_at`を条件にDELETEして `/logs` にリダイレクト。
-9. `GET /templates` → `task_templates.html` でテンプレートを調子ごとに一覧表示。`POST /templates/add`・`/templates/edit`・`/templates/delete` で追加・名前変更・削除し、`/templates` にリダイレクト。
-10. `GET /stats` → 全体・調子ごとの達成率（全期間）と、直近 `STATS_RECENT_DAYS` 日の調子の割合（円グラフ、CSS の `conic-gradient`）を `stats.html` に表示。記録がない場合は `None` を渡し、テンプレート側で「データなし」と表示する。
+### API
 
-セッションに `selected_tasks` がない状態で `/complete`・`/cancel` に来た場合（保存後にブラウザで戻った等）や、`condition` が不正な場合は `/` にリダイレクトする。
+| メソッドとパス | 内容 |
+| --- | --- |
+| `GET /api/templates` | 調子ごとのテンプレート（良い→普通→よくない の順）と `nameMaxLength` |
+| `POST /api/templates` | `{condition, name}` で追加 |
+| `PATCH /api/templates/{id}` | `{name}` で名前を変更 |
+| `DELETE /api/templates/{id}` | 削除（記録は消えない） |
+| `GET /api/session` | 進行中のタスク（無ければ `{"session": null}`） |
+| `POST /api/session` | `{condition, templateIds}` で始める。その調子に実在する id だけを使い、並びはテンプレート順 |
+| `POST /api/session/tasks/{index}/complete` | index 番目を完了にする（同名タスクがあっても1つだけ完了になるよう、名前ではなく位置で指定） |
+| `POST /api/session/save` | `{memo}` で記録を保存し、進行中の状態を消す |
+| `GET /api/logs` | 記録を1回分（同じ `created_at`）ずつまとめて、新しい順に返す |
+| `DELETE /api/logs/{created_at}` | 1回分の記録を削除（`created_at` は URL エンコードして渡す） |
+| `GET /api/stats` | 全体・調子ごとの達成率（全期間）、直近30日の調子の割合。記録が無いものは `null` |
 
-### 既知の粗さ（学習用プロジェクトゆえの意図的なもの — 指摘はしても、指示なく勝手に直さないこと）
+### フロントエンド（`frontend/src`）
 
-- `.env` に `SECRET_KEY` と `DB_PATH` が必要
-- タスクテンプレートの初期データは `app.py` の `init_db()` と `task_condition_log.py` にそれぞれハードコードされて重複しており、内容も一部異なる（CLI 版は「昨日の復習10分」「参考書4セクション」など）。
+- `main.tsx` — Astryx の CSS（reset → astryx → theme の順に意味がある）とフォント（`@fontsource/figtree`。日本語は OS のフォント）を読み込む。
+- `App.tsx` — ルーティング（React Router）。`/`（調子とタスクを選ぶ）→ `/session`（1つずつ完了）→ `/session/finish`（メモを付けて記録。全部完了か途中で終えたかで文言が変わる）、`/logs`、`/stats`、`/templates`。Astryx の日本語化（`InternationalizationProvider`）とテーマもここ。
+- `api.ts` — API の型と呼び出し関数。エラーはサーバーの日本語メッセージを持つ `ApiError` になる。
+- `hooks/useApi.ts` — ページ表示時の読み込み（loading / error / ready）。
+- `components/Layout.tsx` — AppShell＋上部ナビ（スマホではメニューに折りたたまれる）。`LinkProvider` に `RouterLink` を渡し、Astryx の `href` をページ再読み込みなしの遷移にしている。
+- `conditions.ts` — 調子ごとの色（`CONDITION_STYLES`）と日時・割合の表示。色は「よくない < 普通 < 良い」の順序がある尺度として、オレンジ・グレー・青（Astryx のデータ可視化トークン）にしている。赤緑の組み合わせは色覚多様性の点で避けた。
+- `index.css` — Astryx にない部分（統計のセグメントバー、色見本など）だけ。色は Astryx のトークン（`var(--color-…)`）を使い、ダークモードに追従させる。
+- 選んだ調子は URL（`/?condition=1`）に持たせている。状態を localStorage などには持たない（進行中のタスクはサーバーの Cookie、記録とテンプレートは DB）。
+
+### Docker
+
+- `Dockerfile` は3段階: `node:22-slim` で `npm ci && npm run build` → `rust:1.99-slim-trixie` で `cargo build --release` → `debian:trixie-slim` に実行ファイルと `dist` だけを入れる。実行ユーザーは root ではなく `tascon`（uid 10001）。`TZ=Asia/Tokyo`（`tzdata` を入れている）で「今日」を日本時間にする。
+- DB はボリューム `tascon-data` の `/data/tascon.db`。`compose.yaml` は `127.0.0.1` にだけ公開している（ログイン機能が無いため）。
+- 開発に使っている VM はディスクが小さいので、Rust のビルド結果（`target`）は Docker のキャッシュに残さない設定にしている。
+
+### バージョン
+
+- Astryx は `0.7.4` に固定（`@astryxdesign/core` と `@astryxdesign/theme-neutral` はそろえる）。ベータ版で更新が速いので、上げるときは画面を確認すること。
+- Rust の依存は `Cargo.lock`、npm の依存は `package-lock.json` で固定している。
+
+## 既知の粗さ（学習用プロジェクトゆえの意図的なもの — 指摘はしても、指示なく勝手に直さないこと）
+
+- `.env`（または環境変数）に `SECRET_KEY` と `DB_PATH` が必要（Docker では `DB_PATH` はイメージ側で設定済み）。
+- タスクテンプレートの初期データは `backend/src/db.rs` の `INITIAL_TEMPLATES` と `task_condition_log.py` にそれぞれハードコードされて重複しており、内容も一部異なる（CLI 版は「昨日の復習10分」「参考書4セクション」など）。`completion_rate` も両方にある。片方を直すときはもう片方も確認すること。
+- ログイン機能が無いので、記録やテンプレートは全員で共有になる。

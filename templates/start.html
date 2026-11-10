@@ -1,5 +1,0 @@
-{% extends "base.html" %}
-
-{% block title %}今日のタスク{% endblock %}
-{% block page %}start{% endblock %}
-{% block data %}{{ {"tasks": tasks, "rate": rate} | tojson }}{% endblock %}

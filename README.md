@@ -3,7 +3,7 @@
 学習者向けの「タスク管理 × その日の調子の記録」アプリです。  
 その日の状態に合わせて学習を進め、達成状況や学習傾向を記録・可視化することを目的としています。
 
-現在はFlaskを用いたWeb版を中心に開発しており、CLI版は初期プロトタイプとして残しています。
+Web 版はバックエンドを Rust、フロントエンドを Vite（React）で作っており、Docker でまとめて動かせます（最初は Flask で作っていました）。CLI 版は初期プロトタイプとして残しています。
 
 ※ アプリ名は検討中です。現時点の第一候補として「tascon」を使っています。
 
@@ -51,6 +51,8 @@
 - これまでの記録の一覧表示・削除
 - タスクテンプレートの追加・編集・削除
 - 統計ページ（全体・調子ごとの達成率、直近30日の調子の割合）
+- 途中でページを離れても、進行中のタスクを続きから再開できる
+- スマホ表示・ダークモード
 
 ### 予定
 - 気分記録
@@ -77,28 +79,46 @@
 
 ## 使用技術
 
-- Python
-- Flask
-- Jinja2
-- SQLite（標準ライブラリの sqlite3 を使用）
-- python-dotenv
-- HTML
-- CSS
-- JavaScript（ビルドなし。import map で CDN から読み込み）
-- [Astryx](https://github.com/meta/astryx)（Meta のデザインシステム。React 19）
-- （予定）Render（デプロイ）
+- バックエンド: Rust（axum、tokio、rusqlite）
+- データベース: SQLite
+- フロントエンド: TypeScript、React 19、React Router、Vite
+- UI: [Astryx](https://github.com/meta/astryx)（Meta のデザインシステム）
+- 実行環境: Docker / Docker Compose
+- CLI 版プロトタイプ: Python
 
 ---
 
 ## セットアップ
 
+最初に `.env.example` を `.env` にコピーし、`SECRET_KEY` を長いランダムな文字列にします（例: `openssl rand -hex 32` の出力）。
+
+### Docker で動かす
+
 ```bash
-pip install -r requirements.txt
-cp .env.example .env   # SECRET_KEY と DB_PATH を設定する
-python app.py          # http://localhost:5000
+docker compose up -d --build   # http://localhost:8080
+docker compose down            # 停止（データはボリューム tascon-data に残る）
 ```
 
-画面の部品（Astryx・React）は CDN から読み込むため、表示にはインターネット接続が必要です。
+8080 番ポートを別のアプリが使っている場合は、`.env` の `TASCON_PORT` を変えてください。
+
+Flask 版で使っていた DB ファイル（例: `tascon.db`）は、そのまま引き継げます。コンテナを止めた状態で次を実行します。
+
+```bash
+docker compose run --rm --user root -v "$PWD/tascon.db:/import.db:ro" app \
+  sh -c 'cp /import.db /data/tascon.db && chown tascon:tascon /data/tascon.db'
+docker compose up -d
+```
+
+### 開発するとき（Docker を使わない）
+
+Rust（[rustup](https://rustup.rs/)）と Node.js（22 以降）が必要です。
+
+```bash
+cd backend && cargo run          # API（.env の ADDR、既定 127.0.0.1:8080）
+cd frontend && npm install && npm run dev   # 画面（/api はバックエンドに転送される）
+```
+
+テストは `cd backend && cargo test`、フロントエンドの型チェックとビルドは `cd frontend && npm run build` です。
 
 CLI版プロトタイプは `python task_condition_log.py` で実行できます。
 

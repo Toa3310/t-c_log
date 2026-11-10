@@ -1,5 +1,0 @@
-{% extends "base.html" %}
-
-{% block title %}途中終了しました{% endblock %}
-{% block page %}finish{% endblock %}
-{% block data %}{{ {"variant": "cancel", "tasks": tasks, "rate": rate, "memoMaxLength": memo_max_length} | tojson }}{% endblock %}

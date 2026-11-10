@@ -1,9 +1,0 @@
-{% extends "base.html" %}
-
-{% block title %}タスクテンプレート{% endblock %}
-{% block page %}templates{% endblock %}
-{% block data %}{{ {
-    "conditions": condition_options,
-    "groups": groups,
-    "nameMaxLength": name_max_length,
-} | tojson }}{% endblock %}
