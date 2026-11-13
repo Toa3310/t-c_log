@@ -1,0 +1,10 @@
+.git
+.env
+*.db
+**/node_modules
+frontend/dist
+backend/target
+venv
+memo
+.claude
+__pycache__

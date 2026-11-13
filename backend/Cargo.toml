@@ -1,0 +1,23 @@
+[package]
+name = "tascon"
+version = "0.1.0"
+edition = "2024"
+description = "その日の調子に合わせて学習タスクを提案・記録するアプリのバックエンド（JSON API）"
+publish = false
+
+[dependencies]
+axum = { version = "0.8.9", features = ["macros"] }
+axum-extra = { version = "0.12.6", features = ["cookie-private"] }
+chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
+dotenvy = "0.15.7"
+# bundled: SQLite 本体を一緒にビルドする（OS に libsqlite3 が無くても動く）
+rusqlite = { version = "0.41.0", features = ["bundled"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+sha2 = "0.11.1"
+tokio = { version = "1.54.1", features = ["macros", "rt-multi-thread", "net", "signal"] }
+tower-http = { version = "0.7.1", features = ["fs"] }
+
+[dev-dependencies]
+http-body-util = "0.1.5"
+tower = { version = "0.5.3", features = ["util"] }

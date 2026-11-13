@@ -1,0 +1,20 @@
+# 起動: docker compose up -d --build   → http://localhost:8080
+#   公開するアドレスとポートは .env の TASCON_BIND / TASCON_PORT で変えられる
+# 停止: docker compose down            （データはボリューム tascon-data に残る）
+services:
+  app:
+    build: .
+    image: tascon
+    ports:
+      # ログイン機能が無いので、既定ではこの PC からだけ開けるようにしている（127.0.0.1）。
+      # Tailscale の IP などを TASCON_BIND に入れると、そのネットワークからだけ開ける
+      - "${TASCON_BIND:-127.0.0.1}:${TASCON_PORT:-8080}:8080"
+    environment:
+      # .env の SECRET_KEY を使う（未設定なら起動しない）
+      SECRET_KEY: ${SECRET_KEY:?.env に SECRET_KEY を設定してください}
+    volumes:
+      - tascon-data:/data
+    restart: unless-stopped
+
+volumes:
+  tascon-data:
