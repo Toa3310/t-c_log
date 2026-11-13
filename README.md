@@ -101,6 +101,8 @@ docker compose down            # 停止（データはボリューム tascon-dat
 
 8080 番ポートを別のアプリが使っている場合は、`.env` の `TASCON_PORT` を変えてください。
 
+初期設定ではこの PC からだけ開けます。Tailscale でつながった他の端末（スマホなど）から使うときは、`.env` の `TASCON_BIND` を `tailscale ip -4` で表示される IP にして、`docker compose up -d` し直してください。ログイン機能が無いので、`0.0.0.0`（すべてのネットワーク）にはしないでください。
+
 Flask 版で使っていた DB ファイル（例: `tascon.db`）は、そのまま引き継げます。コンテナを止めた状態で次を実行します。
 
 ```bash

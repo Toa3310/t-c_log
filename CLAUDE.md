@@ -10,7 +10,7 @@ tascon（仮称） は、その日の「調子（コンディション）」（�
 
 初回: `.env.example` を `.env` にコピーして値を設定する（`SECRET_KEY` は必須）。
 
-- Docker で起動: `docker compose up -d --build` → `http://localhost:8080`（ポートは `.env` の `TASCON_PORT`）
+- Docker で起動: `docker compose up -d --build` → `http://localhost:8080`（公開するアドレスとポートは `.env` の `TASCON_BIND`・`TASCON_PORT`）
 - バックエンド（`backend/`）
   - 起動: `cargo run`（`.env` の `ADDR`、既定 `127.0.0.1:8080` で API だけを提供）
   - テスト: `cargo test`（`src/domain.rs` の単体テストと `tests/api.rs` の API テスト。メモリ上の SQLite を使う）
@@ -75,7 +75,8 @@ task_condition_log.py     CLI 版プロトタイプ（Python、標準ライブ�
 ### Docker
 
 - `Dockerfile` は3段階: `node:22-slim` で `npm ci && npm run build` → `rust:1.99-slim-trixie` で `cargo build --release` → `debian:trixie-slim` に実行ファイルと `dist` だけを入れる。実行ユーザーは root ではなく `tascon`（uid 10001）。`TZ=Asia/Tokyo`（`tzdata` を入れている）で「今日」を日本時間にする。
-- DB はボリューム `tascon-data` の `/data/tascon.db`。`compose.yaml` は `127.0.0.1` にだけ公開している（ログイン機能が無いため）。
+- DB はボリューム `tascon-data` の `/data/tascon.db`。
+- 公開するアドレスは `.env` の `TASCON_BIND`（既定 `127.0.0.1`＝この PC だけ）。Tailscale の IP にすると tailnet の端末からだけ開ける。ログイン機能が無いので `0.0.0.0` にはしないこと。
 - 開発に使っている VM はディスクが小さいので、Rust のビルド結果（`target`）は Docker のキャッシュに残さない設定にしている。
 
 ### バージョン
