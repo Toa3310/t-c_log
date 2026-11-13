@@ -14,6 +14,8 @@ def display_task_status(tasks):
         print(f"{i}: {task['name']} [{status}]")
 
 def completion_rate(tasks):
+    if not tasks:
+        return 0
     count = 0
     for task in tasks:
         if task["done"]:
@@ -22,7 +24,13 @@ def completion_rate(tasks):
 
 tasks = []
 
-condition = int(input("今日のコンディションを入力してください(0:良くない,1:普通,2:良い): "))
+# 0/1/2 以外が入力されたら再入力してもらう
+while True:
+    condition_input = input("今日のコンディションを入力してください(0:良くない,1:普通,2:良い): ").strip()
+    if condition_input in ("0", "1", "2"):
+        condition = int(condition_input)
+        break
+    print("0,1,2のどれかを入力してください")
 
 if condition == 0:
     tasks = [
@@ -40,7 +48,7 @@ elif condition == 1:
         {"name": "重要単語メモ15分", "done": False}
     ]
 
-elif condition == 2:
+else:
     tasks = [
         {"name": "過去問30問", "done": False},
         {"name": "参考書4セクション", "done": False},
@@ -48,20 +56,20 @@ elif condition == 2:
         {"name": "重要単語メモ20分", "done": False}
     ]
 
-else:
-    print("0,1,2のどれかを入力してください")
-
 
 print("\n-タスク一覧-")
 display_task(tasks)
 
 
-selected_nums = list(map(int, input("\n今日行うタスクを選択してください(例:1 2): ").split()))
-
-selected_tasks = []
-
-for i in selected_nums:
-    selected_tasks.append(tasks[i - 1])
+# 範囲内の番号が1つ以上入力されるまで繰り返す（重複は1回だけ採用）
+while True:
+    selected_tasks = []
+    for s in input("\n今日行うタスクを選択してください(例:1 2): ").split():
+        if s.isdecimal() and 1 <= int(s) <= len(tasks) and tasks[int(s) - 1] not in selected_tasks:
+            selected_tasks.append(tasks[int(s) - 1])
+    if selected_tasks:
+        break
+    print(f"1〜{len(tasks)}の番号を1つ以上入力してください")
 
 # 完了処理
 while True:
@@ -72,11 +80,15 @@ while True:
     c_rate = completion_rate(selected_tasks)
     print(f"進捗: {c_rate}%")
 
-    user_input = input("\n完了したタスク番号を入力(qで終了): ")
+    user_input = input("\n完了したタスク番号を入力(qで終了): ").strip()
 
     if user_input == "q":
         print("終了します")
         break
+
+    if not (user_input.isdecimal() and 1 <= int(user_input) <= len(selected_tasks)):
+        print(f"1〜{len(selected_tasks)}の番号かqを入力してください")
+        continue
 
     num = int(user_input)
 
