@@ -8,10 +8,26 @@ body {
     line-height: 1.7;
 }
 
+nav {
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #ddd;
+}
+
+nav a {
+    margin-right: 10px;
+    text-decoration: none;
+}
+
 h1 {
     font-size: 1.4rem;
     border-bottom: 2px solid #ddd;
     padding-bottom: 8px;
+}
+
+h2 {
+    font-size: 1.15rem;
+    margin-top: 24px;
 }
 
 table{
@@ -68,12 +84,22 @@ fieldset label {
 }
 
 .danger{
-    color: #c0392b;
-    border-color: #e0b4b0;
+    background-color: #ff4d4f;
+    color: #ffffff;
 }
 
 .danger:hover {
-    background-color: #fbeeec;
+    background-color: #ff3819;
+}
+
+.primary {
+    color: #ffffff;
+    background: #0068b7;
+    border-color: #0068b7;
+}
+
+.primary:hover {
+    background: #00568f;
 }
 
 .nowrap{
@@ -128,4 +154,11 @@ fieldset label {
 .legend {
     list-style: none;
     padding: 0;
+}
+
+.flex-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
 }

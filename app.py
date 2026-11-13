@@ -232,7 +232,6 @@ def stats():
         condition_ratio = (count_by_condition.get(c,0) / total) * 100 if total != 0 else 0
         rate_list.append({"label": CONDITION_LABELS[c],"rate": achieve_rate,})
         composition_list.append({"label": CONDITION_LABELS[c], "color": CONDITION_COLORS[c] , "ratio": condition_ratio})
-
     cumulative = 0
     parts = []
     for item in composition_list:
@@ -241,7 +240,6 @@ def stats():
         end = cumulative
         parts.append(f"{item['color']} {start}% {end}%")
     pie = "conic-gradient(" + ", ".join(parts) + ")"
-
     return render_template("stats.html", rate=all_ach, condition_by_rates=rate_list, composition_ratio=composition_list, pie=pie)
 
 if __name__ == "__main__":
