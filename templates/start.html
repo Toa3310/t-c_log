@@ -1,13 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}今日のタスク{% endblock %}
+{% block title %}Bochi | 今日のタスク{% endblock %}
 
 {% block content %}
     <h1>今日のタスク</h1>
     <h2>進捗: {{ rate | round(1) }}%</h2>
     {% for task in tasks %}
-        <p>
-            {{ task.name }}
+        <div class="flex-row">
             {% if task.done %}
                 ✅
             {% else %}
@@ -16,7 +15,8 @@
                     <button class="primary" type="submit">完了</button>
                 </form>
             {% endif %}
-        </p>
+            {{ task.name }}
+        </div>
     {% endfor %}
     <p>途中終了する場合は下のボタンを押してください</p>
     <form action="/cancel" method="POST">

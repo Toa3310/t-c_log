@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}これまでの記録一覧{% endblock %}
+{% block title %}Bochi | 今までの記録{% endblock %}
 
 {% block content %}
     <h1>記録一覧</h1>
@@ -18,7 +18,7 @@
             <td>{{ s.condition }}</td>
             <td>
                 {% for task in s.tasks %}
-                    {{ task.task_name }}{% if task.done %}✅{% else %}(未完了){% endif %}<br>
+                    {% if task.done %}✅{% else %}(未完了){% endif %} {{ task.task_name }}<br>
                 {% endfor %}
             </td>
             <td>{% if s.memo %}{{ s.memo }}{% endif %}</td>
