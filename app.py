@@ -3,7 +3,7 @@ import os
 from datetime import date, datetime, timedelta
 
 from dotenv import load_dotenv
-from flask import Flask, redirect, render_template, request, session, url_for
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 
 load_dotenv()
 app = Flask(__name__)
@@ -75,6 +75,11 @@ def completion_rate(tasks):
 CONDITION_LABELS = {0: "よくない", 1: "普通", 2: "良い"}
 CONDITION_COLORS = {0: "#0067C0", 1: "#F58220", 2: "#00B16B"}
 
+def parse_condition(value):
+    if value in ("0", "1", "2"):
+        return int(value)
+    return None
+
 def make_tasks(condition):
     conn = get_db()
     rows = conn.execute("SELECT name FROM task_templates WHERE condition = ?", (condition,)).fetchall()
@@ -91,14 +96,18 @@ def index():
 
 @app.route('/tasks', methods=["POST"])
 def tasks():
-    condition = int(request.form["condition"])
+    condition = parse_condition(request.form.get("condition"))
+    if condition is None:
+        return redirect(url_for("index"))
     task_list = make_tasks(condition)
     return render_template("index.html", tasks=task_list, condition=condition)
 
 @app.route('/start', methods=["POST"])
 def start():
+    condition = parse_condition(request.form.get("condition"))
+    if condition is None:
+        return redirect(url_for("index"))
     selected_names = request.form.getlist("selected_tasks")
-    condition = int(request.form["condition"])
     if not selected_names:
         task_list = make_tasks(condition)
         return render_template("index.html", tasks=task_list, condition=condition, message="タスクを1つ以上選択してください")
@@ -111,11 +120,14 @@ def start():
 
 @app.route('/complete', methods=["POST"])
 def complete():
-    task_name = request.form["task_name"]
     selected_tasks = session.get("selected_tasks", [])
-    for task in selected_tasks:
-        if task["name"] == task_name:
-            task["done"] = True
+    if not selected_tasks:
+        flash("作業中のデータが見つかりませんでした。最初からやり直してください。")
+        return redirect(url_for("index"))
+    index = request.form.get("task_index")
+    if index is None or not index.isdigit() or int(index) >= len(selected_tasks):
+        return redirect(url_for("index"))
+    selected_tasks[int(index)]["done"] = True
     session["selected_tasks"] = selected_tasks
     rate = completion_rate(selected_tasks)
     all_done = all(task["done"] for task in selected_tasks)
@@ -127,6 +139,9 @@ def complete():
 @app.route('/cancel', methods=["POST"])
 def cancel():
     selected_tasks = session.get("selected_tasks", [])
+    if not selected_tasks:
+        flash("作業中のデータが見つかりませんでした。最初からやり直してください。")
+        return redirect(url_for("index"))
     rate = completion_rate(selected_tasks)
     return render_template("cancel.html", tasks=selected_tasks, rate=rate)
 
@@ -144,7 +159,7 @@ def save():
 @app.route('/logs')
 def logs():
     conn = get_db()
-    rows = conn.execute("SELECT * FROM task_logs ORDER BY id DESC").fetchall()
+    rows = conn.execute("SELECT * FROM task_logs ORDER BY created_at DESC, id ASC").fetchall()
     conn.close()
     sessions = []
     for row in rows:
@@ -186,8 +201,11 @@ def delete_template():
 
 @app.route('/templates/add', methods=["POST"])
 def add_template():
-    condition = request.form["condition"]
-    task_name = request.form["name"]
+    condition = parse_condition(request.form.get("condition"))
+    task_name = request.form.get("name", "").strip()
+    if condition is None or not task_name:
+        flash("タスク名を入力してください。")
+        return redirect(url_for("templates"))
     conn = get_db()
     conn.execute("INSERT INTO task_templates (condition, name) VALUES (?, ?)", (condition, task_name))
     conn.commit()
@@ -196,8 +214,11 @@ def add_template():
 
 @app.route('/templates/edit', methods=["POST"])
 def edit_template():
-    id = request.form["id"]
-    name = request.form["name"]
+    id = request.form.get("id")
+    name = request.form.get("name", "").strip()
+    if not id or not name:
+        flash("タスク名を入力してください。")
+        return redirect(url_for("templates"))
     conn = get_db()
     conn.execute("UPDATE task_templates SET name = ? WHERE id = ?", (name, id))
     conn.commit()
@@ -227,20 +248,24 @@ def stats():
     for row in count_rows:
         count_by_condition[row[0]] = row[1]
     total = sum(count_by_condition.values())
+    has_recent = total != 0
     for c in [2,1,0]:
         achieve_rate = rate_by_condition.get(c, 0)
-        condition_ratio = (count_by_condition.get(c,0) / total) * 100 if total != 0 else 0
+        condition_ratio = (count_by_condition.get(c,0) / total) * 100 if has_recent else 0
         rate_list.append({"label": CONDITION_LABELS[c],"rate": achieve_rate,})
         composition_list.append({"label": CONDITION_LABELS[c], "color": CONDITION_COLORS[c] , "ratio": condition_ratio})
-    cumulative = 0
-    parts = []
-    for item in composition_list:
-        start = cumulative
-        cumulative += item["ratio"]
-        end = cumulative
-        parts.append(f"{item['color']} {start}% {end}%")
-    pie = "conic-gradient(" + ", ".join(parts) + ")"
-    return render_template("stats.html", rate=all_ach, condition_by_rates=rate_list, composition_ratio=composition_list, pie=pie)
+    if has_recent:
+        cumulative = 0
+        parts = []
+        for item in composition_list:
+            start = cumulative
+            cumulative += item["ratio"]
+            end = cumulative
+            parts.append(f"{item['color']} {start}% {end}%")
+        pie = "conic-gradient(" + ", ".join(parts) + ")"
+    else:
+        pie = "conic-gradient(#e0e0e0 0% 100%)"
+    return render_template("stats.html", rate=all_ach, condition_by_rates=rate_list, composition_ratio=composition_list, pie=pie, has_recent=has_recent)
 
 if __name__ == "__main__":
     app.run(debug=True)

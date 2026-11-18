@@ -11,7 +11,7 @@
                 ✅
             {% else %}
                 <form action="/complete" method="POST">
-                    <input type="hidden" name="task_name" value="{{ task.name }}">
+                    <input type="hidden" name="task_index" value="{{ loop.index0 }}">
                     <button class="primary" type="submit">完了</button>
                 </form>
             {% endif %}
