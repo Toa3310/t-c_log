@@ -32,15 +32,15 @@ function SessionCard({ session, onDelete }: { session: LogSession; onDelete: () 
       <VStack gap={3}>
         <HStack gap={2} justify="between" align="start">
           <VStack gap={1}>
-            <Heading level={2}>{when}</Heading>
             <HStack gap={2} align="center" wrap="wrap">
               <ConditionBadge condition={session.condition} label={session.conditionLabel} />
-              <Text type="supporting">
-                {session.tasks.length}件中 {doneCount}件 完了（{formatPercent(rate)}）
-              </Text>
+              <Heading level={2}>完了率 {formatPercent(rate)}</Heading>
             </HStack>
+            <Text type="supporting">
+              {when}・{session.tasks.length}件中 {doneCount}件 完了
+            </Text>
           </VStack>
-          <Button variant="ghost" size="sm" label={`${when}の記録を削除`} onClick={onDelete}>
+          <Button variant="destructive" size="sm" label={`${when}の記録を削除`} onClick={onDelete}>
             削除
           </Button>
         </HStack>
@@ -54,9 +54,7 @@ function SessionCard({ session, onDelete }: { session: LogSession; onDelete: () 
           ))}
         </List>
         {session.memo && (
-          <Text as="p" color="secondary">
-            メモ: {session.memo}
-          </Text>
+          <Text as="p">振り返り: {session.memo}</Text>
         )}
       </VStack>
     </Card>

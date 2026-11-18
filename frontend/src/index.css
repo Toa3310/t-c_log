@@ -28,11 +28,39 @@ body {
   border-radius: 3px;
 }
 
-/* 統計: いちばん大きく見せる数字（全体の達成率） */
+/* 統計: いちばん大きく見せる数字（全体の完了率） */
 .hero-figure {
   font-size: 48px;
   font-weight: 600;
   line-height: 1.1;
+  color: var(--color-text-primary);
+}
+
+/* 完了画面: すべて完了したときの達成感を出す大きな表示 */
+.finish-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-block: 8px;
+  text-align: center;
+}
+
+.finish-hero-emoji {
+  font-size: 40px;
+  line-height: 1;
+}
+
+.finish-hero-figure {
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1.05;
+  color: var(--color-text-success, var(--color-text-primary));
+}
+
+.finish-hero-caption {
+  font-size: 16px;
+  font-weight: 600;
   color: var(--color-text-primary);
 }
 

@@ -141,7 +141,7 @@ function TemplateRow({
         <Button type="submit" label={`「${task.name}」の名前を更新`} isDisabled={!isChanged} isLoading={isSaving}>
           更新
         </Button>
-        <Button variant="ghost" label={`「${task.name}」を削除`} onClick={onDelete}>
+        <Button variant="destructive" label={`「${task.name}」を削除`} onClick={onDelete}>
           削除
         </Button>
       </HStack>
@@ -155,7 +155,7 @@ export function TemplatesPage() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const header = <PageHeader title="タスクテンプレート" description="調子ごとに提案するタスクを編集できます。" />
+  const header = <PageHeader title="タスクテンプレート" description="調子ごとに、その日やるタスクの候補を編集できます。" />
   if (state.status === 'loading') {
     return (
       <>

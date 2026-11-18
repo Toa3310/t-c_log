@@ -17,7 +17,7 @@ const COPY = {
   },
   cancel: {
     title: '今回はここまでにしました',
-    description: 'ここまでの進み具合を記録しておきましょう。',
+    description: 'ここまでよく取り組みました。進み具合を記録しておきましょう。',
     placeholder: '例: 寝不足だった',
   },
 }
@@ -54,6 +54,13 @@ export function FinishPage() {
       <PageHeader title={copy.title} description={copy.description} />
       <Card>
         <VStack gap={3}>
+          {session.isComplete && (
+            <div className="finish-hero">
+              <span className="finish-hero-emoji" aria-hidden="true">🎉</span>
+              <span className="finish-hero-figure">{formatPercent(session.rate)}</span>
+              <span className="finish-hero-caption">今日のタスクをすべて完了！</span>
+            </div>
+          )}
           <ProgressBar
             label="進捗"
             value={session.rate}
@@ -88,7 +95,6 @@ export function FinishPage() {
               status={error ? { type: 'error', message: error } : undefined}
             />
             <HStack gap={2} justify="end" wrap="wrap">
-              {!session.isComplete && <Button href="/session" variant="ghost" label="タスクに戻る" />}
               <Button type="submit" variant="primary" label="記録する" isLoading={isSaving} />
             </HStack>
           </VStack>

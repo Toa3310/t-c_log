@@ -45,7 +45,7 @@ export interface LogSession {
 }
 
 export interface StatsResponse {
-  /** 全体の達成率。記録が無ければ null */
+  /** 全体の完了率。記録が無ければ null */
   rate: number | null
   totalTasks: number
   doneTasks: number

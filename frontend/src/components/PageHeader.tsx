@@ -7,11 +7,7 @@ export function PageHeader({ title, description }: { title: string; description?
       {/* React 19 では <title> をどこに書いても <head> に入る */}
       <title>{`${title} | tascon`}</title>
       <Heading level={1}>{title}</Heading>
-      {description && (
-        <Text as="p" color="secondary">
-          {description}
-        </Text>
-      )}
+      {description && <Text as="p">{description}</Text>}
     </VStack>
   )
 }

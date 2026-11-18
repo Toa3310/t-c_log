@@ -20,7 +20,6 @@ import { type Condition, type TemplateGroup, api, errorMessage } from '../api.ts
 import { ConditionBadge, ConditionSwatch } from '../components/ConditionBadge.tsx'
 import { LoadError, Loading } from '../components/LoadState.tsx'
 import { PageHeader } from '../components/PageHeader.tsx'
-import { CONDITION_STYLES } from '../conditions.ts'
 import { useApi } from '../hooks/useApi.ts'
 
 function parseCondition(value: string | null): Condition | null {
@@ -50,7 +49,6 @@ function ConditionPicker({
               <ConditionSwatch condition={g.condition} />
               <Text weight="semibold">{g.label}</Text>
             </HStack>
-            <Text type="supporting">{CONDITION_STYLES[g.condition].hint}</Text>
           </VStack>
         </SelectableCard>
       ))}
@@ -147,7 +145,7 @@ export function TodayPage() {
   const header = (
     <PageHeader
       title="今日の調子は？"
-      description="今の集中度や気分に近いものを選ぶと、その調子に合ったタスクを提案します。"
+      description="今の集中度や気分に近いものを選ぶと、その調子に合わせて用意したタスクから選べます。"
     />
   )
   if (templates.state.status === 'loading' || current.state.status === 'loading') {

@@ -1,4 +1,4 @@
-// 統計: 全体の達成率（大きな数字＋メーター）、調子ごとの達成率（メーターの一覧）、
+// 統計: 全体の完了率（大きな数字＋メーター）、調子ごとの完了率（メーターの一覧）、
 // 直近の調子の割合（細いセグメントバー＋回数と割合の一覧）
 import { Button, Card, EmptyState, Heading, List, ListItem, ProgressBar, Text, VStack } from '@astryxdesign/core'
 
@@ -13,9 +13,9 @@ function OverallCard({ rate, totalTasks, doneTasks }: { rate: number; totalTasks
   return (
     <Card>
       <VStack gap={3}>
-        <Heading level={2}>全体の達成率</Heading>
+        <Heading level={2}>全体の完了率</Heading>
         <div className="hero-figure">{formatPercent(rate)}</div>
-        <ProgressBar label="全体の達成率" isLabelHidden value={rate} />
+        <ProgressBar label="全体の完了率" isLabelHidden value={rate} />
         <Text type="supporting">
           これまでに記録した{totalTasks}件のタスクのうち、{doneTasks}件を完了
         </Text>
@@ -29,7 +29,7 @@ function ConditionRatesCard({ conditionRates }: { conditionRates: StatsResponse[
     <Card>
       <VStack gap={4}>
         <VStack gap={1}>
-          <Heading level={2}>調子ごとの達成率</Heading>
+          <Heading level={2}>調子ごとの完了率</Heading>
           <Text type="supporting">これまでの全記録から計算しています</Text>
         </VStack>
         {conditionRates.map((item) =>
@@ -62,7 +62,7 @@ function CompositionCard({ composition, recentTotal, recentDays }: Pick<StatsRes
           <Heading level={2}>直近{recentDays}日の調子</Heading>
           <Text type="supporting">
             {recentTotal > 0
-              ? `記録した${recentTotal}回のうち、それぞれの調子だった割合`
+              ? `直近${recentDays}日で記録した${recentTotal}回における、それぞれの調子の割合`
               : `直近${recentDays}日の記録がありません`}
           </Text>
         </VStack>
@@ -102,7 +102,7 @@ function CompositionCard({ composition, recentTotal, recentDays }: Pick<StatsRes
 
 export function StatsPage() {
   const { state, reload } = useApi(api.stats)
-  const header = <PageHeader title="統計" description="記録から、達成率と調子の傾向を振り返ります。" />
+  const header = <PageHeader title="統計" description="記録から、完了率と調子の傾向を振り返ります。" />
 
   if (state.status === 'loading') {
     return (
@@ -129,7 +129,7 @@ export function StatsPage() {
         <Card>
           <EmptyState
             title="まだ記録がありません"
-            description="タスクを記録すると、達成率や調子の傾向がここに表示されます。"
+            description="タスクを記録すると、完了率や調子の傾向がここに表示されます。"
             actions={<Button href="/" variant="primary" label="今日のタスクを始める" />}
           />
         </Card>
