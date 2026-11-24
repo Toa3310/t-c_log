@@ -3,14 +3,20 @@
 {% block title %}Bochi | 途中終了{% endblock %}
 
 {% block content %}
-    <h1>今回はここまでにしました</h1>
-    <p>今日やったタスク↓</p>
-    <ul>
+    {% set done_count = tasks | selectattr('done') | list | length %}
+    <div class="encourage">
+        <h1>おつかれさまでした</h1>
+        <p class="done-count">{{ done_count }} / {{ tasks | length }} 個 完了</p>
+    </div>
+
+    <h2>今日やったこと</h2>
+    <ul class="done-list">
         {% for task in tasks %}
-            <li>{% if task.done %}✅{% else %}(未完了){% endif %} {{ task.name }}</li>
+            <li class="{% if not task.done %}muted{% endif %}">
+                {% if task.done %}✅{% else %}・{% endif %} {{ task.name }}
+            </li>
         {% endfor %}
     </ul>
-    <p>進捗: {{ rate | round(1) }}%</p>
 
     <form action="/save" method="POST">
         <label for="memo">今日の振り返り（一言メモ）</label><br>

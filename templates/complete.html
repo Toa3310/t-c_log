@@ -3,14 +3,19 @@
 {% block title %}Bochi | タスク完了{% endblock %}
 
 {% block content %}
-    <h1>今日のタスクは全て完了しました！</h1>
-    <p>以下のタスクをしました↓</p>
-    <ul>
+    <div class="celebrate">
+        <div class="emoji">🎉</div>
+        <h1>今日のタスク、全部完了！</h1>
+        <p class="big-rate">{{ rate | round | int }}%</p>
+        <p class="sub">よくがんばりました！</p>
+    </div>
+
+    <h2>完了したタスク</h2>
+    <ul class="done-list">
         {% for task in tasks %}
             <li>✅ {{ task.name }}</li>
         {% endfor %}
     </ul>
-    <p>進捗: {{ rate | round(1) }}%</p>
 
     <form action="/save" method="POST">
         <label for="memo">今日の振り返り（一言メモ）</label><br>
