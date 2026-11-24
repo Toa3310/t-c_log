@@ -1,7 +1,7 @@
 body {
     font-family: sans-serif;
-    background-color: #fffaf0;
-    color: #333;
+    background-color: #f2f3f5;
+    color: #1c1e21;
     max-width: 640px;
     margin: 0 auto;
     padding: 24px 16px;
@@ -161,4 +161,81 @@ fieldset label {
     align-items: center;
     gap: 8px;
     margin-bottom: 8px;
+}
+
+/* 完了画面の達成感演出 */
+.celebrate {
+    text-align: center;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    padding: 28px 16px;
+    margin: 16px 0;
+}
+
+.celebrate h1 {
+    border: none;
+    font-size: 1.6rem;
+    padding: 0;
+    margin: 8px 0;
+}
+
+.celebrate .emoji {
+    font-size: 3rem;
+    line-height: 1;
+}
+
+.celebrate .big-rate {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #00B16B;
+    margin: 4px 0;
+}
+
+.celebrate .sub {
+    color: #555;
+    margin: 0;
+}
+
+/* 中断画面の労うトーン */
+.encourage {
+    text-align: center;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    padding: 20px 16px;
+    margin: 16px 0;
+}
+
+.encourage h1 {
+    border: none;
+    font-size: 1.3rem;
+    padding: 0;
+    margin: 4px 0;
+}
+
+.encourage .done-count {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #0068b7;
+    margin: 4px 0;
+}
+
+.encourage .sub {
+    color: #555;
+    margin: 0;
+}
+
+/* 完了/中断画面のタスク一覧 */
+.done-list {
+    list-style: none;
+    padding: 0;
+}
+
+.done-list li {
+    padding: 4px 0;
+}
+
+.done-list .muted {
+    color: #999;
 }

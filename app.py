@@ -125,9 +125,8 @@ def complete():
         flash("作業中のデータが見つかりませんでした。最初からやり直してください。")
         return redirect(url_for("index"))
     index = request.form.get("task_index")
-    if index is None or not index.isdigit() or int(index) >= len(selected_tasks):
-        return redirect(url_for("index"))
-    selected_tasks[int(index)]["done"] = True
+    if index is not None and index.isdigit() and int(index) < len(selected_tasks):
+        selected_tasks[int(index)]["done"] = True
     session["selected_tasks"] = selected_tasks
     rate = completion_rate(selected_tasks)
     all_done = all(task["done"] for task in selected_tasks)
@@ -172,7 +171,9 @@ def logs():
 
 @app.route('/logs/delete', methods=["POST"])
 def delete_log():
-    created_at = request.form["created_at"]
+    created_at = request.form.get("created_at")
+    if not created_at:
+        return redirect(url_for("logs"))
     conn = get_db()
     conn.execute("DELETE FROM task_logs WHERE created_at = ?", (created_at,))
     conn.commit()
@@ -192,7 +193,9 @@ def templates():
 
 @app.route('/templates/delete', methods=["POST"])
 def delete_template():
-    template_id = request.form["id"]
+    template_id = request.form.get("id")
+    if not template_id:
+        return redirect(url_for("templates"))
     conn = get_db()
     conn.execute("DELETE FROM task_templates WHERE id = ?", (template_id,))
     conn.commit()
